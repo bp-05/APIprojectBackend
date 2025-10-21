@@ -205,3 +205,94 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+static/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# Project-specific additions
+# OS/editor artifacts
+.idea/
+.DS_Store
+Thumbs.db
+
+# Django collectstatic output (if used)
+staticfiles/
+
+# SQLite databases (local/testing)
+*.sqlite3
+
+# Celery runtime files (generalized)
+celerybeat-schedule*
+celery*.pid
+
+# Microsoft Office temporary lock files (for Excel templates)
+~$*
+.history/
+
+# Database
+*.sqlite3
+*.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Docker
+docker-compose.override.yml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Misc
+*.swp
+*.bak
+*.tmp
+*~

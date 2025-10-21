@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,10 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-fv@!zs9ygyr2d#dj4@8#%&n0e26mu%&#p)=rrj(d3)39r@fstn'
+# Load from environment; fall back to a non-sensitive dev default
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret-key-change-me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() in {"1", "true", "yes", "on"}
 
 ALLOWED_HOSTS = []
 
@@ -41,6 +42,14 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'users',
+    # Nuevas apps:
+    'semesters',
+    'subjects',
+    'forms_app',
+    'descriptors',
+    'exports_app',
+    #libreria externa
+    'simple_history'
 ]
 
 MIDDLEWARE = [
@@ -52,13 +61,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 # Allow CORS for local development
 CORS_ALLOWED_ORIGINS = ['http://localhost:5173' ,'http://localhost:3000']
 
 REST_FRAMEWORK = {
-  'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+  'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication','rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication'],
   'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
   'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend','rest_framework.filters.SearchFilter','rest_framework.filters.OrderingFilter'],
 }
@@ -86,10 +97,26 @@ WSGI_APPLICATION = 'api_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    }
+} """
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.getenv("MYSQL_DATABASE", "api_db"),
+        "USER": os.getenv("MYSQL_USER", "api_user"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD", "secret"),
+        "HOST": os.getenv("MYSQL_HOST", "db"),
+        "PORT": int(os.getenv("MYSQL_PORT", "3306")),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "sql_mode": "STRICT_TRANS_TABLES",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
 
@@ -99,6 +126,7 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'users.User'
 
+""" 
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -112,7 +140,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
-]
+] 
+"""
+AUTH_PASSWORD_VALIDATORS = []
 
 
 # Internationalization
@@ -130,9 +160,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#CELERY_BROKER_URL = 'redis://redis:6379/0'             # TODO: ajusta
+#CELERY_RESULT_BACKEND = 'redis://redis:6379/1'         # TODO: ajusta
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/1")
+CELERY_TASK_ALWAYS_EAGER = False                       # True solo en tests
