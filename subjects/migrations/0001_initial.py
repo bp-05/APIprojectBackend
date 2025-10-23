@@ -141,6 +141,39 @@ class Migration(migrations.Migration):
             ],
             options={'ordering': ('subject',)},
         ),
+        migrations.CreateModel(
+            name='CompanyEngagementScope',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('benefits_from_student', models.TextField(blank=True, default='')),
+                ('has_value_or_research_project', models.BooleanField(default=False)),
+                ('time_availability_and_participation', models.TextField(blank=True, default='')),
+                ('workplace_has_conditions_for_group', models.BooleanField(default=False)),
+                ('meeting_schedule_availability', models.TextField(blank=True, default='')),
+                ('subject', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='engagement_scope', to='subjects.subject')),
+            ],
+            options={'ordering': ('subject',)},
+        ),
+        migrations.CreateModel(
+            name='ProblemStatement',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('problem_to_address', models.TextField(blank=True, default='')),
+                ('why_important', models.TextField(blank=True, default='')),
+                ('stakeholders', models.TextField(blank=True, default='')),
+                ('related_area', models.TextField(blank=True, default='')),
+                ('benefits_short_medium_long_term', models.TextField(blank=True, default='')),
+                ('problem_definition', models.TextField(blank=True, default='')),
+                ('counterpart_contacts', models.JSONField(default=__import__('subjects.models', fromlist=['default_counterpart_contacts']).default_counterpart_contacts)),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='problem_statements', to='companies.company')),
+                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='problem_statements', to='subjects.subject')),
+            ],
+            options={'ordering': ('subject', 'company')},
+        ),
+        migrations.AddConstraint(
+            model_name='problemstatement',
+            constraint=models.UniqueConstraint(fields=('subject', 'company'), name='uniq_problem_statement_subject_company'),
+        ),
         migrations.RunPython(seed_areas_and_semesters, migrations.RunPython.noop),
     ]
 

@@ -25,7 +25,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from users.views import MeViewSet, UserViewSet
 
 # Import other app views
-from subjects.views import SubjectViewSet, AreaViewSet, SubjectSemesterViewSet, CompanyRequirementViewSet, Api3AlternanceViewSet, ApiType2CompletionViewSet, ApiType3CompletionViewSet
+from subjects.views import SubjectViewSet, AreaViewSet, SubjectSemesterViewSet, CompanyRequirementViewSet, Api3AlternanceViewSet, ApiType2CompletionViewSet, ApiType3CompletionViewSet, CompanyEngagementScopeViewSet, ProblemStatementViewSet
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
 from companies.views import CompanyViewSet
@@ -44,6 +44,8 @@ router.register(r'company-requirements', CompanyRequirementViewSet, basename='co
 router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')
 router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-completion')
 router.register(r'api3-completions', ApiType3CompletionViewSet, basename='api3-completion')
+router.register(r'engagement-scopes', CompanyEngagementScopeViewSet, basename='engagement-scope')
+router.register(r'problem-statements', ProblemStatementViewSet, basename='problem-statement')
 router.register(r'forms', FormInstanceViewSet, basename='forminstance')
 router.register(r'form-templates', FormTemplateViewSet, basename='formtemplate')
 router.register(r'descriptors', DescriptorViewSet, basename='descriptor')

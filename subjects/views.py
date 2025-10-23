@@ -2,8 +2,8 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import viewsets, permissions
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion
-from .serializers import SubjectSerializer, AreaSerializer, SemesterLevelSerializer, CompanyRequirementSerializer, Api3AlternanceSerializer, ApiType2CompletionSerializer, ApiType3CompletionSerializer
+from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement
+from .serializers import SubjectSerializer, AreaSerializer, SemesterLevelSerializer, CompanyRequirementSerializer, Api3AlternanceSerializer, ApiType2CompletionSerializer, ApiType3CompletionSerializer, CompanyEngagementScopeSerializer, ProblemStatementSerializer
 from .permissions import IsSubjectTeacherOrAdmin
 
 
@@ -74,6 +74,32 @@ class ApiType2CompletionViewSet(viewsets.ModelViewSet):
 class ApiType3CompletionViewSet(viewsets.ModelViewSet):
     queryset = ApiType3Completion.objects.all().select_related('subject')
     serializer_class = ApiType3CompletionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+            return qs
+        return qs.filter(subject__teacher=user)
+
+
+class CompanyEngagementScopeViewSet(viewsets.ModelViewSet):
+    queryset = CompanyEngagementScope.objects.all().select_related('subject')
+    serializer_class = CompanyEngagementScopeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+            return qs
+        return qs.filter(subject__teacher=user)
+
+
+class ProblemStatementViewSet(viewsets.ModelViewSet):
+    queryset = ProblemStatement.objects.all().select_related('subject', 'company')
+    serializer_class = ProblemStatementSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

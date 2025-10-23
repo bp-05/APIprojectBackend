@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, default_subject_units, default_subject_competencies, default_company_boundary_conditions
+from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement, default_subject_units, default_subject_competencies, default_company_boundary_conditions, default_counterpart_contacts
 
 
 class SubjectUnitItemSerializer(serializers.Serializer):
@@ -177,5 +177,44 @@ class ApiType3CompletionSerializer(serializers.ModelSerializer):
             'other_activities',
             'master_guide_expected_support',
             'subject',
+        ]
+
+
+class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyEngagementScope
+        fields = [
+            'id',
+            'benefits_from_student',
+            'has_value_or_research_project',
+            'time_availability_and_participation',
+            'workplace_has_conditions_for_group',
+            'meeting_schedule_availability',
+            'subject',
+        ]
+
+
+class CounterpartContactItemSerializer(serializers.Serializer):
+    name = serializers.CharField(required=True, allow_blank=True)
+    counterpart_area = serializers.CharField(required=True, allow_blank=True)
+    role = serializers.CharField(required=True, allow_blank=True)
+
+
+class ProblemStatementSerializer(serializers.ModelSerializer):
+    counterpart_contacts = CounterpartContactItemSerializer(many=True, required=False, default=default_counterpart_contacts)
+
+    class Meta:
+        model = ProblemStatement
+        fields = [
+            'id',
+            'problem_to_address',
+            'why_important',
+            'stakeholders',
+            'related_area',
+            'benefits_short_medium_long_term',
+            'problem_definition',
+            'counterpart_contacts',
+            'subject',
+            'company',
         ]
 

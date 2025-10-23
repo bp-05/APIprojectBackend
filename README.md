@@ -137,6 +137,21 @@ Todos los endpoints bajo `/api/` requieren autenticación (config global `IsAuth
 - Visibilidad: docentes ven solo los registros de sus asignaturas; `staff`/`vcm` ven todos.
 - Ejemplo creación: `{"project_goal_students":"...","deliverables_at_end":"...","expected_student_role":"...","other_activities":"...","master_guide_expected_support":"...","subject":1}`.
 
+## Alcance con Contraparte (`engagement-scopes`)
+- Relación 1:1 con `Subject`. Se usa para detallar el alcance del trabajo con la contraparte en la ficha proyecto API.
+- Endpoint: `GET/POST /api/engagement-scopes/`, `GET/PUT/PATCH/DELETE /api/engagement-scopes/{id}/`
+- Campos: `benefits_from_student` (texto), `has_value_or_research_project` (bool), `time_availability_and_participation` (texto), `workplace_has_conditions_for_group` (bool), `meeting_schedule_availability` (texto), `subject`.
+- Visibilidad: docentes ven solo los registros de sus asignaturas; `staff`/`vcm` ven todos.
+- Ejemplo creación: `{"benefits_from_student":"...","has_value_or_research_project":true,"time_availability_and_participation":"...","workplace_has_conditions_for_group":false,"meeting_schedule_availability":"...","subject":1}`.
+
+## Problemática con Contraparte (`problem-statements`)
+- Relación por par Asignatura–Empresa (única por combinación). Se registra la problemática a abordar y contactos de contraparte.
+- Endpoint: `GET/POST /api/problem-statements/`, `GET/PUT/PATCH/DELETE /api/problem-statements/{id}/`
+- Campos: `problem_to_address`, `why_important`, `stakeholders`, `related_area`, `benefits_short_medium_long_term`, `problem_definition`, `counterpart_contacts` (JSON lista de objetos con claves `name`, `counterpart_area`, `role`), `subject` (FK), `company` (FK).
+- Defaults: `counterpart_contacts` inicia con un elemento con textos vacíos.
+- Visibilidad: docentes ven solo registros de sus asignaturas; `staff`/`vcm` ven todos.
+- Ejemplo creación: `{"problem_to_address":"...","why_important":"...","stakeholders":"...","related_area":"...","benefits_short_medium_long_term":"...","problem_definition":"...","counterpart_contacts":[{"name":"","counterpart_area":"","role":""}],"subject":1,"company":1}`.
+
 ## Claves primarias
 - Todos los modelos usan un `id` autoincremental. En settings está configurado `DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'`.
 

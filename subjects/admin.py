@@ -1,6 +1,6 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion
+from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
@@ -55,5 +55,21 @@ class ApiType3CompletionAdmin(admin.ModelAdmin):
     list_display = ("id", "subject")
     search_fields = ("subject__code", "subject__name")
     autocomplete_fields = ("subject",)
+    ordering = ("subject",)
+
+
+@admin.register(CompanyEngagementScope)
+class CompanyEngagementScopeAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "has_value_or_research_project", "workplace_has_conditions_for_group")
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
+
+
+@admin.register(ProblemStatement)
+class ProblemStatementAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "company")
+    search_fields = ("subject__code", "subject__name", "company__name")
+    autocomplete_fields = ("subject", "company")
     ordering = ("subject",)
 
