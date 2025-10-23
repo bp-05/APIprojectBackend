@@ -7,7 +7,7 @@ from .serializers import DescriptorUploadSerializer
 from .tasks import process_descriptor
 
 class DescriptorViewSet(viewsets.ModelViewSet):
-    queryset = DescriptorFile.objects.all().select_related('subject','semester')
+    queryset = DescriptorFile.objects.all().select_related('subject')
     serializer_class = DescriptorUploadSerializer
     permission_classes = [permissions.IsAuthenticated]
 

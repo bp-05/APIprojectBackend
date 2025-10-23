@@ -14,7 +14,6 @@ class FormTemplate(models.Model):
 
 class FormInstance(models.Model):
     subject  = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='forms')
-    semester = models.ForeignKey('semesters.Semester', on_delete=models.PROTECT, related_name='forms')
     template = models.ForeignKey(FormTemplate, on_delete=models.PROTECT, related_name='instances')
     data     = models.JSONField(default=dict, blank=True)
     status   = models.CharField(max_length=20, default='draft')  # draft|in_review|approved
@@ -22,4 +21,4 @@ class FormInstance(models.Model):
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = ('subject', 'semester', 'template')
+        unique_together = ('subject', 'template')

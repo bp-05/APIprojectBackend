@@ -43,11 +43,11 @@ INSTALLED_APPS = [
     'django_filters',
     'users',
     # Nuevas apps:
-    'semesters',
     'subjects',
     'forms_app',
     'descriptors',
     'exports_app',
+    'companies',
     #libreria externa
     'simple_history'
 ]

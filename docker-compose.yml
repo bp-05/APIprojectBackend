@@ -44,6 +44,8 @@ services:
       CREATE_SUPERUSER: "0"
       WAIT_FOR_MIGRATIONS: "1"
     command: celery -A api_backend worker -l INFO
+    volumes:
+      - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -58,6 +60,8 @@ services:
       CREATE_SUPERUSER: "0"
       WAIT_FOR_MIGRATIONS: "1"
     command: celery -A api_backend beat -l INFO
+    volumes:
+      - media_data:/app/media
     depends_on:
       db:
         condition: service_healthy

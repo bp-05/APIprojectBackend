@@ -25,10 +25,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from users.views import MeViewSet, UserViewSet
 
 # Import other app views
-from semesters.views import SemesterViewSet
-from subjects.views import SubjectViewSet
+from subjects.views import SubjectViewSet, AreaViewSet, SubjectSemesterViewSet, CompanyRequirementViewSet, Api3AlternanceViewSet, ApiType2CompletionViewSet, ApiType3CompletionViewSet
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
+from companies.views import CompanyViewSet
 
 # Configure router
 router = DefaultRouter()
@@ -37,11 +37,17 @@ router.register(r'users/me', MeViewSet, basename='users-me')
 router.register(r'users', UserViewSet, basename='users')
 
 # Other app routes
-router.register(r'semesters', SemesterViewSet, basename='semester')
 router.register(r'subjects', SubjectViewSet, basename='subject')
+router.register(r'areas', AreaViewSet, basename='area')
+router.register(r'subject-semesters', SubjectSemesterViewSet, basename='subject-semester')
+router.register(r'company-requirements', CompanyRequirementViewSet, basename='company-requirement')
+router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')
+router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-completion')
+router.register(r'api3-completions', ApiType3CompletionViewSet, basename='api3-completion')
 router.register(r'forms', FormInstanceViewSet, basename='forminstance')
 router.register(r'form-templates', FormTemplateViewSet, basename='formtemplate')
 router.register(r'descriptors', DescriptorViewSet, basename='descriptor')
+router.register(r'companies', CompanyViewSet, basename='company')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

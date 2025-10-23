@@ -1,11 +1,59 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Subject
+from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "name", "teacher", "api_flag")
-    list_filter = ("api_flag",)
+    list_display = ("id", "code", "name", "campus", "hours", "api_type", "teacher", "area", "semester")
+    list_filter = ( "api_type", "area", "semester")
     search_fields = ("code", "name", "teacher__username", "teacher__first_name", "teacher__last_name")
-    autocomplete_fields = ("teacher",)
+    autocomplete_fields = ("teacher", "area", "semester")
     ordering = ("code",)
+
+
+@admin.register(Area)
+class AreaAdmin(admin.ModelAdmin):
+    list_display = ("id", "name")
+    search_fields = ("name",)
+    ordering = ("name",)
+
+
+@admin.register(SemesterLevel)
+class SemesterLevelAdmin(admin.ModelAdmin):
+    list_display = ("id", "name")
+    search_fields = ("name",)
+    ordering = ("id",)
+
+
+@admin.register(CompanyRequirement)
+class CompanyRequirementAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "company", "sector", "interaction_type", "worked_before", "can_receive_alternance", "alternance_students_quota")
+    list_filter = ("interaction_type", "worked_before", "can_receive_alternance")
+    search_fields = ("subject__code", "subject__name", "company__name")
+    autocomplete_fields = ("subject", "company")
+    ordering = ("subject",)
+
+
+@admin.register(Api3Alternance)
+class Api3AlternanceAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "student_role", "students_quota", "tutor_name", "tutor_email", "alternance_hours")
+    search_fields = ("subject__code", "subject__name", "tutor_name", "tutor_email")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
+
+
+@admin.register(ApiType2Completion)
+class ApiType2CompletionAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject")
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
+
+
+@admin.register(ApiType3Completion)
+class ApiType3CompletionAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject")
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
+

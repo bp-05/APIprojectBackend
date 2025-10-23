@@ -11,7 +11,7 @@ class FormInstanceSerializer(serializers.ModelSerializer):
     template_key = serializers.CharField(source='template.key', read_only=True)
     class Meta:
         model = FormInstance
-        fields = ['id','subject','semester','template','template_key','data','status','updated_by']
+        fields = ['id','subject','template','template_key','data','status','updated_by']
         read_only_fields = ['updated_by']
 
     def validate(self, attrs):

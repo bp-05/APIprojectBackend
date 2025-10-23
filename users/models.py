@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+﻿from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
 class UserManager(BaseUserManager):
@@ -17,7 +17,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, username, email=None, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("role", "ADMIN")  # ← garantiza rol ADMIN
+        extra_fields.setdefault("role", "ADMIN")  # â† garantiza rol ADMIN
         if extra_fields.get("is_staff") is not True or extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser debe tener is_staff=True e is_superuser=True")
         return self.create_user(username, email, password, **extra_fields)
@@ -25,8 +25,9 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Admin"
-        VCM   = "VCM",   "Vinculación con el Medio"
-        DA    = "DA",    "Dirección Académica"
+        VCM   = "VCM",   "Vinculacion con el medio"
+        DAC   = "DAC",   "Departamento Academico"
+        DC    = "DC",    "Director de carrera"
         DOC   = "DOC",   "Docente"
         COORD = "COORD", "Coordinador API"
 
@@ -41,4 +42,5 @@ class User(AbstractUser):
                 name="superuser_must_be_admin_role"
             )
         ]
+
 

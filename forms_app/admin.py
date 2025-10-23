@@ -17,8 +17,8 @@ class FormTemplateAdmin(SimpleHistoryAdmin):
 @admin.register(FormInstance)
 class FormInstanceAdmin(SimpleHistoryAdmin):
     formfield_overrides = JSON_OVERRIDES
-    list_display = ("id", "subject", "semester", "template", "status", "updated_by")
-    list_filter = ("status", "semester", "template")
+    list_display = ("id", "subject", "template", "status", "updated_by")
+    list_filter = ("status", "template")
     search_fields = ("subject__code", "subject__name")
-    autocomplete_fields = ("subject", "semester", "template", "updated_by")
+    autocomplete_fields = ("subject", "template", "updated_by")
     ordering = ("-id",)

@@ -13,7 +13,7 @@ class FormTemplateViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
 
 class FormInstanceViewSet(viewsets.ModelViewSet):
-    queryset = FormInstance.objects.select_related('subject','semester','template')
+    queryset = FormInstance.objects.select_related('subject','template')
     serializer_class = FormInstanceSerializer
     permission_classes = [permissions.IsAuthenticated, IsFormOwnerOrCoordinator]
 
@@ -21,11 +21,11 @@ class FormInstanceViewSet(viewsets.ModelViewSet):
         qs = super().get_queryset()
         user = self.request.user
         subject = self.request.query_params.get('subject')
-        semester = self.request.query_params.get('semester')
         template = self.request.query_params.get('template')
-        if subject: qs = qs.filter(subject__code=subject)
-        if semester: qs = qs.filter(semester__code=semester)
-        if template: qs = qs.filter(template__key=template)
+        if subject:
+            qs = qs.filter(subject__code=subject)
+        if template:
+            qs = qs.filter(template__key=template)
         if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)

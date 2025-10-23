@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('semesters', '0001_initial'),
         ('subjects', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
@@ -37,7 +36,7 @@ class Migration(migrations.Migration):
                 ('history_change_reason', models.CharField(max_length=100, null=True)),
                 ('history_type', models.CharField(choices=[('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')], max_length=1)),
                 ('history_user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL)),
-                ('semester', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='semesters.semester')),
+                # removed semester relation after deprecating semesters app
                 ('subject', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='subjects.subject')),
                 ('template', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to='forms_app.formtemplate')),
                 ('updated_by', models.ForeignKey(blank=True, db_constraint=False, null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='+', to=settings.AUTH_USER_MODEL)),
@@ -56,13 +55,13 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('data', models.JSONField(blank=True, default=dict)),
                 ('status', models.CharField(default='draft', max_length=20)),
-                ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='forms', to='semesters.semester')),
+                # removed semester relation after deprecating semesters app
                 ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='forms', to='subjects.subject')),
                 ('updated_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
                 ('template', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='instances', to='forms_app.formtemplate')),
             ],
             options={
-                'unique_together': {('subject', 'semester', 'template')},
+                'unique_together': {('subject', 'template')},
             },
         ),
     ]

@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('semesters', '0001_initial'),
         ('subjects', '0001_initial'),
     ]
 
@@ -23,11 +22,9 @@ class Migration(migrations.Migration):
                 ('text_cache', models.TextField(blank=True)),
                 ('meta', models.JSONField(blank=True, default=dict)),
                 ('processed_at', models.DateTimeField(blank=True, null=True)),
-                ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='descriptors', to='semesters.semester')),
+                # removed semester relation after deprecating semesters app
                 ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='descriptors', to='subjects.subject')),
             ],
-            options={
-                'unique_together': {('subject', 'semester')},
-            },
+            options={'constraints': [models.UniqueConstraint(fields=['subject'], name='unique_descriptor_per_subject')]},
         ),
     ]
