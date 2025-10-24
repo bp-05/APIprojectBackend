@@ -173,7 +173,7 @@ Valida tu configuraciAAn: `python scripts/check_env.py`
 - Relacion N:1 con Subject. Cada unidad tiene 
 umber (1..4, unico por asignatura) y los campos de detalle.
 - Endpoint: GET/POST /api/subject-units/, GET/PUT/PATCH/DELETE /api/subject-units/{id}/`n- Campos: subject (FK), 
-umber (1..4), expected_learning, unit_hours (=0), ctivities_description, evaluation_evidence, evidence_detail, counterpart_link, place_mode_type, counterpart_participant_name.
+umber (1..4), expected_learning, unit_hours (=0), activities_description, evaluation_evidence, evidence_detail, counterpart_link, place_mode_type, counterpart_participant_name.
 
 ## Competencias Tecnicas (subject-competencies)
 - Relacion N:1 con Subject. Cada competencia tiene 
@@ -181,7 +181,7 @@ umber (1..5, unico por asignatura) y description.
 - Endpoint: GET/POST /api/subject-competencies/, GET/PUT/PATCH/DELETE /api/subject-competencies/{id}/`n- Campos: subject (FK), 
 umber (1..5), description.
 
-## Condiciones de Borde (oundary-conditions)
+## Condiciones de Borde (Boundary-conditions)
 - Relacion 1:1 con Subject.
-- Endpoint: GET/POST /api/boundary-conditions/, GET/PUT/PATCH/DELETE /api/boundary-conditions/{id}/`n- Campos: subject (OneToOne), large_company, medium_company, small_company, amily_enterprise, 
+- Endpoint: GET/POST /api/boundary-conditions/, GET/PUT/PATCH/DELETE /api/boundary-conditions/{id}/`n- Campos: subject (OneToOne), large_company, medium_company, small_company, family_enterprise, 
 ot_relevant (booleanos), company_type_description, company_requirements_for_level_2_3, project_minimum_elements (textos).
