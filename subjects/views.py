@@ -11,6 +11,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all().select_related('teacher', 'area')
     serializer_class = SubjectSerializer
     permission_classes = [permissions.IsAuthenticated, IsSubjectTeacherOrAdmin]
+    filterset_fields = ['code']
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -18,6 +19,16 @@ class SubjectViewSet(viewsets.ModelViewSet):
         if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(teacher=user)
+
+    @action(detail=False, methods=['get'], url_path=r'by-code/(?P<code>[^/]+)')
+    def by_code(self, request, code=None):
+        qs = self.get_queryset()
+        try:
+            obj = qs.get(code=code)
+        except Subject.DoesNotExist:
+            return Response({'detail': 'Not found.'}, status=404)
+        serializer = self.get_serializer(obj)
+        return Response(serializer.data)
 
 
 class AreaViewSet(viewsets.ReadOnlyModelViewSet):

@@ -2,45 +2,6 @@
 # Create your models here.
 from django.db import models
 from django.conf import settings
-
-
-def default_subject_units(): #ficha proeycto api tabla unidades
-    return [
-        {
-            "number": None,
-            "expected_learning": None,
-            "unit_hours": None,
-            "activities_description": None,
-            "evaluation_evidence": None,
-            "evidence_detail": None,
-            "counterpart_link": None,
-            "place_mode_type": None,
-            "counterpart_participant_name": None,
-        }
-        for _ in range(3)
-    ]
-
-
-def default_subject_competencies(): #ficha api competencias tecnicas
-    return [
-        {
-            "number": i,
-            "description": "",
-        }
-        for i in range(1, 6)
-    ]
-
-def default_company_boundary_conditions(): #seccion 1 ficha api condiciones de borde empresas
-    return {
-        "large_company": False,
-        "medium_company": False,
-        "small_company": False,
-        "family_enterprise": False,
-        "not_relevant": False,
-        "company_type_description": "",
-        "company_requirements_for_level_2_3": "",
-        "project_minimum_elements": "",
-    }
 class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/instituciones
     INTERACTION_CHOICES = (
         ("virtual", "Virtual"),
@@ -86,17 +47,15 @@ class SemesterLevel(models.Model):
         return self.name
 
 class Subject(models.Model):
-    code = models.CharField(max_length=20, unique=True)
-    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20, unique=True) #olbigatorio
+    name = models.CharField(max_length=200) #olbigatorio
     campus = models.CharField(max_length=50, default="chillan")
     hours = models.PositiveIntegerField(default=0)
     api_type = models.PositiveSmallIntegerField(
         default=1,
         choices=((1, "Type 1"), (2, "Type 2"), (3, "Type 3")),
     )
-    units = models.JSONField(default=default_subject_units)
-    technical_competencies = models.JSONField(default=default_subject_competencies)
-    company_boundary_conditions = models.JSONField(default=default_company_boundary_conditions)
+    # normalized: units, technical_competencies and company_boundary_conditions moved to dedicated tables
     teacher = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -104,8 +63,8 @@ class Subject(models.Model):
         null=True,
         blank=True,
     )
-    area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='subjects')
-    semester = models.ForeignKey('subjects.SemesterLevel', on_delete=models.PROTECT, related_name='subjects')
+    area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
+    semester = models.ForeignKey('subjects.SemesterLevel', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
 
     def __str__(self):
         return f"{self.code} - {self.name}"
