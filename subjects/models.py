@@ -96,7 +96,7 @@ class SubjectUnit(models.Model):  #ficha proyecto api unidades
         return f"Unit {self.number} - {self.subject.code}"
 
 
-class SubjectTechnicalCompetency(models.Model): #ficha proyecto api competencias técnicas
+class SubjectTechnicalCompetency(models.Model): #ficha api competencias técnicas
     number = models.IntegerField()
     description = models.TextField(blank=True, null=True)
     subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='technical_competencies')
@@ -115,7 +115,7 @@ class SubjectTechnicalCompetency(models.Model): #ficha proyecto api competencias
         return f"Competency {self.number} - {self.subject.code}"
 
 
-class CompanyBoundaryCondition(models.Model):
+class CompanyBoundaryCondition(models.Model):  #ficha api seccion 1
     large_company = models.BooleanField(null=True)
     medium_company = models.BooleanField(null=True)
     small_company = models.BooleanField(null=True)
