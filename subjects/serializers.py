@@ -1,10 +1,51 @@
 from rest_framework import serializers
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement, default_subject_units, default_subject_competencies, default_company_boundary_conditions, default_counterpart_contacts
+from rest_framework.validators import UniqueTogetherValidator
+from .models import (
+    Subject,
+    Area,
+    SemesterLevel,
+    SubjectUnit,
+    SubjectTechnicalCompetency,
+    CompanyBoundaryCondition,
+    CompanyRequirement,
+    Api3Alternance,
+    ApiType2Completion,
+    ApiType3Completion,
+    CompanyEngagementScope,
+    ProblemStatement,
+    default_counterpart_contacts,
+)
+
+
+class SubjectSerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
+    area_name = serializers.CharField(source='area.name', read_only=True)
+    semester_name = serializers.CharField(source='semester.name', read_only=True)
+
+    class Meta:
+        model = Subject
+        fields = ['id', 'code', 'name', 'campus', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'semester', 'semester_name']
+        extra_kwargs = {
+            'teacher': {'required': False, 'allow_null': True},
+        }
+
+
+class AreaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Area
+        fields = ['id', 'name']
+
+
+class SemesterLevelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SemesterLevel
+        fields = ['id', 'name']
 
 
 class SubjectUnitSerializer(serializers.ModelSerializer):
     number = serializers.IntegerField(min_value=1, max_value=4)
     unit_hours = serializers.IntegerField(min_value=0, required=False, allow_null=True)
+
     class Meta:
         model = SubjectUnit
         fields = [
@@ -23,6 +64,7 @@ class SubjectUnitSerializer(serializers.ModelSerializer):
 
 class SubjectTechnicalCompetencySerializer(serializers.ModelSerializer):
     number = serializers.IntegerField(min_value=1, max_value=5)
+
     class Meta:
         model = SubjectTechnicalCompetency
         fields = ['id', 'subject', 'number', 'description']
@@ -52,30 +94,6 @@ class CompanyBoundaryConditionSerializer(serializers.ModelSerializer):
             if qs.exists():
                 raise serializers.ValidationError({'subject': 'Ya existe una condición de borde para esta asignatura'})
         return super().validate(attrs)
-
-class SubjectSerializer(serializers.ModelSerializer):
-    teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
-    area_name = serializers.CharField(source='area.name', read_only=True)
-    semester_name = serializers.CharField(source='semester.name', read_only=True)
-
-    class Meta:
-        model = Subject
-        fields = ['id', 'code', 'name', 'campus', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'semester', 'semester_name']
-        extra_kwargs = {
-            'teacher': {'required': False, 'allow_null': True},
-        }
-
-
-class AreaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Area
-        fields = ['id', 'name']
-
-
-class SemesterLevelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SemesterLevel
-        fields = ['id', 'name']
 
 
 class CompanyRequirementSerializer(serializers.ModelSerializer):
@@ -175,4 +193,3 @@ class ProblemStatementSerializer(serializers.ModelSerializer):
             'subject',
             'company',
         ]
-

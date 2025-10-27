@@ -25,7 +25,20 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from users.views import MeViewSet, UserViewSet
 
 # Import other app views
-from subjects.views import SubjectViewSet, AreaViewSet, SubjectSemesterViewSet, CompanyRequirementViewSet, Api3AlternanceViewSet, ApiType2CompletionViewSet, ApiType3CompletionViewSet, CompanyEngagementScopeViewSet, ProblemStatementViewSet
+from subjects.views import (
+    SubjectViewSet,
+    AreaViewSet,
+    SubjectSemesterViewSet,
+    SubjectUnitViewSet,
+    SubjectTechnicalCompetencyViewSet,
+    CompanyBoundaryConditionViewSet,
+    CompanyRequirementViewSet,
+    Api3AlternanceViewSet,
+    ApiType2CompletionViewSet,
+    ApiType3CompletionViewSet,
+    CompanyEngagementScopeViewSet,
+    ProblemStatementViewSet,
+)
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
 from companies.views import CompanyViewSet
@@ -40,6 +53,9 @@ router.register(r'users', UserViewSet, basename='users')
 router.register(r'subjects', SubjectViewSet, basename='subject')
 router.register(r'areas', AreaViewSet, basename='area')
 router.register(r'subject-semesters', SubjectSemesterViewSet, basename='subject-semester')
+router.register(r'subject-units', SubjectUnitViewSet, basename='subject-unit')
+router.register(r'subject-competencies', SubjectTechnicalCompetencyViewSet, basename='subject-competency')
+router.register(r'boundary-conditions', CompanyBoundaryConditionViewSet, basename='boundary-condition')
 router.register(r'company-requirements', CompanyRequirementViewSet, basename='company-requirement')
 router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')
 router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-completion')

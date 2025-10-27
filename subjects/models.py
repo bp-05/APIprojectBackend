@@ -70,6 +70,69 @@ class Subject(models.Model):
         return f"{self.code} - {self.name}"
 
 
+class SubjectUnit(models.Model):  #ficha proyecto api unidades
+    number = models.IntegerField()
+    expected_learning = models.TextField(blank=True, null=True)
+    unit_hours = models.PositiveIntegerField(blank=True, null=True)
+    activities_description = models.TextField(blank=True, null=True)
+    evaluation_evidence = models.TextField(blank=True, null=True)
+    evidence_detail = models.TextField(blank=True, null=True)
+    counterpart_link = models.TextField(blank=True, null=True)
+    place_mode_type = models.TextField(blank=True, null=True)
+    counterpart_participant_name = models.TextField(blank=True, null=True)
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='units')
+
+    class Meta:
+        ordering = ("subject", "number")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(number__gte=1) & models.Q(number__lte=4),
+                name="unit_number_between_1_4",
+            ),
+            models.UniqueConstraint(fields=("subject", "number"), name="uniq_unit_subject_number"),
+        ]
+
+    def __str__(self):
+        return f"Unit {self.number} - {self.subject.code}"
+
+
+class SubjectTechnicalCompetency(models.Model): #ficha proyecto api competencias técnicas
+    number = models.IntegerField()
+    description = models.TextField(blank=True, null=True)
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='technical_competencies')
+
+    class Meta:
+        ordering = ("subject", "number")
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(number__gte=1) & models.Q(number__lte=5),
+                name="competency_number_between_1_5",
+            ),
+            models.UniqueConstraint(fields=("subject", "number"), name="uniq_competency_subject_number"),
+        ]
+
+    def __str__(self):
+        return f"Competency {self.number} - {self.subject.code}"
+
+
+class CompanyBoundaryCondition(models.Model):
+    large_company = models.BooleanField(null=True)
+    medium_company = models.BooleanField(null=True)
+    small_company = models.BooleanField(null=True)
+    family_enterprise = models.BooleanField(null=True)
+    not_relevant = models.BooleanField(null=True)
+    company_type_description = models.TextField(blank=True, null=True)
+    company_requirements_for_level_2_3 = models.TextField(blank=True, null=True)
+    project_minimum_elements = models.TextField(blank=True, null=True)
+    subject = models.OneToOneField('subjects.Subject', on_delete=models.CASCADE, related_name='company_boundary_conditions')
+
+    class Meta:
+        ordering = ("subject",)
+
+    def __str__(self):
+        return f"Boundary conditions - {self.subject.code}"
+
+
 class Api3Alternance(models.Model): #post seccion 4 ficha api
     student_role = models.CharField(max_length=200)
     students_quota = models.PositiveIntegerField(default=0)

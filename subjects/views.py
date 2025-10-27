@@ -2,8 +2,36 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import viewsets, permissions
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement
-from .serializers import SubjectSerializer, AreaSerializer, SemesterLevelSerializer, CompanyRequirementSerializer, Api3AlternanceSerializer, ApiType2CompletionSerializer, ApiType3CompletionSerializer, CompanyEngagementScopeSerializer, ProblemStatementSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from .models import (
+    Subject,
+    Area,
+    SemesterLevel,
+    SubjectUnit,
+    SubjectTechnicalCompetency,
+    CompanyBoundaryCondition,
+    CompanyRequirement,
+    Api3Alternance,
+    ApiType2Completion,
+    ApiType3Completion,
+    CompanyEngagementScope,
+    ProblemStatement,
+)
+from .serializers import (
+    SubjectSerializer,
+    AreaSerializer,
+    SemesterLevelSerializer,
+    SubjectUnitSerializer,
+    SubjectTechnicalCompetencySerializer,
+    CompanyBoundaryConditionSerializer,
+    CompanyRequirementSerializer,
+    Api3AlternanceSerializer,
+    ApiType2CompletionSerializer,
+    ApiType3CompletionSerializer,
+    CompanyEngagementScopeSerializer,
+    ProblemStatementSerializer,
+)
 from .permissions import IsSubjectTeacherOrAdmin
 
 
@@ -41,6 +69,47 @@ class SubjectSemesterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SemesterLevel.objects.all().order_by('id')
     serializer_class = SemesterLevelSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class SubjectUnitViewSet(viewsets.ModelViewSet):
+    queryset = SubjectUnit.objects.all().select_related('subject')
+    serializer_class = SubjectUnitSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['subject']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+            return qs
+        return qs.filter(subject__teacher=user)
+
+
+class SubjectTechnicalCompetencyViewSet(viewsets.ModelViewSet):
+    queryset = SubjectTechnicalCompetency.objects.all().select_related('subject')
+    serializer_class = SubjectTechnicalCompetencySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['subject']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+            return qs
+        return qs.filter(subject__teacher=user)
+
+
+class CompanyBoundaryConditionViewSet(viewsets.ModelViewSet):
+    queryset = CompanyBoundaryCondition.objects.all().select_related('subject')
+    serializer_class = CompanyBoundaryConditionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+            return qs
+        return qs.filter(subject__teacher=user)
 
 
 class CompanyRequirementViewSet(viewsets.ModelViewSet):

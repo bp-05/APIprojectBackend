@@ -1,6 +1,19 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Subject, Area, SemesterLevel, CompanyRequirement, Api3Alternance, ApiType2Completion, ApiType3Completion, CompanyEngagementScope, ProblemStatement
+from .models import (
+    Subject,
+    Area,
+    SemesterLevel,
+    SubjectUnit,
+    SubjectTechnicalCompetency,
+    CompanyBoundaryCondition,
+    CompanyRequirement,
+    Api3Alternance,
+    ApiType2Completion,
+    ApiType3Completion,
+    CompanyEngagementScope,
+    ProblemStatement,
+)
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
@@ -23,6 +36,32 @@ class SemesterLevelAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("name",)
     ordering = ("id",)
+
+
+@admin.register(SubjectUnit)
+class SubjectUnitAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "number", "unit_hours")
+    list_filter = ("number",)
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject", "number")
+
+
+@admin.register(SubjectTechnicalCompetency)
+class SubjectTechnicalCompetencyAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "number")
+    list_filter = ("number",)
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject", "number")
+
+
+@admin.register(CompanyBoundaryCondition)
+class CompanyBoundaryConditionAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "large_company", "medium_company", "small_company", "family_enterprise", "not_relevant")
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
 
 
 @admin.register(CompanyRequirement)
