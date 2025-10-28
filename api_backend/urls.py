@@ -36,12 +36,10 @@ from subjects.views import (
     Api3AlternanceViewSet,
     ApiType2CompletionViewSet,
     ApiType3CompletionViewSet,
-    CompanyEngagementScopeViewSet,
-    ProblemStatementViewSet,
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
-from companies.views import CompanyViewSet
+from companies.views import CompanyViewSet, ProblemStatementViewSet, CompanyEngagementScopeViewSet
 
 # Configure router
 router = DefaultRouter()

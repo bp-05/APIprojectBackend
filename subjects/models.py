@@ -1,7 +1,6 @@
-
-# Create your models here.
 from django.db import models
 from django.conf import settings
+
 class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/instituciones
     INTERACTION_CHOICES = (
         ("virtual", "Virtual"),
@@ -18,11 +17,14 @@ class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/institucio
     has_guide = models.BooleanField(default=False)
     can_receive_alternance = models.BooleanField(default=False)
     alternance_students_quota = models.PositiveIntegerField(default=0)
-    subject = models.OneToOneField('subjects.Subject', on_delete=models.CASCADE, related_name='company_requirement')
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='company_requirements')
     company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='requirements')
 
     class Meta:
         ordering = ("subject",)
+        constraints = [
+            models.UniqueConstraint(fields=("subject", "company"), name="uniq_requirement_subject_company"),
+        ]
 
     def __str__(self):
         return f"Requirement for {self.subject.code}"
@@ -47,7 +49,8 @@ class SemesterLevel(models.Model):
         return self.name
 
 class Subject(models.Model):
-    code = models.CharField(max_length=20, unique=True) #olbigatorio
+    code = models.CharField(max_length=20) #olbigatorio
+    section = models.CharField(max_length=10, default="1")  # mandatory, default to "1"
     name = models.CharField(max_length=200) #olbigatorio
     campus = models.CharField(max_length=50, default="chillan")
     hours = models.PositiveIntegerField(default=0)
@@ -66,8 +69,13 @@ class Subject(models.Model):
     area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
     semester = models.ForeignKey('subjects.SemesterLevel', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=("code", "section"), name="uniq_subject_code_section"),
+        ]
+
     def __str__(self):
-        return f"{self.code} - {self.name}"
+        return f"{self.code} (Sec. {self.section}) - {self.name}"
 
 
 class SubjectUnit(models.Model):  #ficha proyecto api unidades
@@ -175,49 +183,3 @@ class ApiType3Completion(models.Model): #seccion 2 ficha api
 
     def __str__(self):
         return f"API3 completion for {self.subject.code}"
-
-
-class CompanyEngagementScope(models.Model): #ficha proyecto api alcance con contraparte
-    benefits_from_student = models.TextField(blank=True, default="")
-    has_value_or_research_project = models.BooleanField(default=False)
-    time_availability_and_participation = models.TextField(blank=True, default="")
-    workplace_has_conditions_for_group = models.BooleanField(default=False)
-    meeting_schedule_availability = models.TextField(blank=True, default="")
-    subject = models.OneToOneField('subjects.Subject', on_delete=models.CASCADE, related_name='engagement_scope')
-
-    class Meta:
-        ordering = ("subject",)
-
-    def __str__(self):
-        return f"Engagement scope for {self.subject.code}"
-
-
-def default_counterpart_contacts(): # encargados contraparte (lista sin límite, default 1 vacío)
-    return [
-        {
-            "name": "",
-            "counterpart_area": "",
-            "role": "",
-        }
-    ]
-
-
-class ProblemStatement(models.Model): #ficha proyecto api problemática con contraparte
-    problem_to_address = models.TextField(blank=True, default="")
-    why_important = models.TextField(blank=True, default="")
-    stakeholders = models.TextField(blank=True, default="")
-    related_area = models.TextField(blank=True, default="")
-    benefits_short_medium_long_term = models.TextField(blank=True, default="")
-    problem_definition = models.TextField(blank=True, default="")
-    counterpart_contacts = models.JSONField(default=default_counterpart_contacts)
-    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='problem_statements')
-    company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='problem_statements')
-
-    class Meta:
-        ordering = ("subject", "company")
-        constraints = [
-            models.UniqueConstraint(fields=["subject", "company"], name="uniq_problem_statement_subject_company"),
-        ]
-
-    def __str__(self):
-        return f"Problem statement: {self.subject.code} - {self.company.name}"

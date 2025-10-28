@@ -11,17 +11,16 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
-    CompanyEngagementScope,
-    ProblemStatement,
 )
+## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "name", "campus", "hours", "api_type", "teacher", "area", "semester")
-    list_filter = ( "api_type", "area", "semester")
-    search_fields = ("code", "name", "teacher__username", "teacher__first_name", "teacher__last_name")
+    list_display = ("id", "code", "section", "name", "campus", "hours", "api_type", "teacher", "area", "semester")
+    list_filter = ( "api_type", "area", "semester", "section")
+    search_fields = ("code", "section", "name", "teacher__username", "teacher__first_name", "teacher__last_name")
     autocomplete_fields = ("teacher", "area", "semester")
-    ordering = ("code",)
+    ordering = ("code", "section")
 
 
 @admin.register(Area)
@@ -97,18 +96,8 @@ class ApiType3CompletionAdmin(admin.ModelAdmin):
     ordering = ("subject",)
 
 
-@admin.register(CompanyEngagementScope)
-class CompanyEngagementScopeAdmin(admin.ModelAdmin):
-    list_display = ("id", "subject", "has_value_or_research_project", "workplace_has_conditions_for_group")
-    search_fields = ("subject__code", "subject__name")
-    autocomplete_fields = ("subject",)
-    ordering = ("subject",)
+## CompanyEngagementScope admin movido a companies.admin
 
 
-@admin.register(ProblemStatement)
-class ProblemStatementAdmin(admin.ModelAdmin):
-    list_display = ("id", "subject", "company")
-    search_fields = ("subject__code", "subject__name", "company__name")
-    autocomplete_fields = ("subject", "company")
-    ordering = ("subject",)
+## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 

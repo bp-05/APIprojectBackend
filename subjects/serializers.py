@@ -11,10 +11,11 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
-    CompanyEngagementScope,
-    ProblemStatement,
-    default_counterpart_contacts,
 )
+"""Serializers for subjects app.
+
+ProblemStatement and CounterpartContact serializers were moved to companies.serializers
+"""
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -24,10 +25,17 @@ class SubjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subject
-        fields = ['id', 'code', 'name', 'campus', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'semester', 'semester_name']
+        fields = ['id', 'code', 'section', 'name', 'campus', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'semester', 'semester_name']
         extra_kwargs = {
             'teacher': {'required': False, 'allow_null': True},
         }
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subject.objects.all(),
+                fields=['code', 'section'],
+                message='code y section deben ser únicos en conjunto'
+            )
+        ]
 
 
 class AreaSerializer(serializers.ModelSerializer):
@@ -156,40 +164,4 @@ class ApiType3CompletionSerializer(serializers.ModelSerializer):
         ]
 
 
-class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompanyEngagementScope
-        fields = [
-            'id',
-            'benefits_from_student',
-            'has_value_or_research_project',
-            'time_availability_and_participation',
-            'workplace_has_conditions_for_group',
-            'meeting_schedule_availability',
-            'subject',
-        ]
-
-
-class CounterpartContactItemSerializer(serializers.Serializer):
-    name = serializers.CharField(required=True, allow_blank=True)
-    counterpart_area = serializers.CharField(required=True, allow_blank=True)
-    role = serializers.CharField(required=True, allow_blank=True)
-
-
-class ProblemStatementSerializer(serializers.ModelSerializer):
-    counterpart_contacts = CounterpartContactItemSerializer(many=True, required=False, default=default_counterpart_contacts)
-
-    class Meta:
-        model = ProblemStatement
-        fields = [
-            'id',
-            'problem_to_address',
-            'why_important',
-            'stakeholders',
-            'related_area',
-            'benefits_short_medium_long_term',
-            'problem_definition',
-            'counterpart_contacts',
-            'subject',
-            'company',
-        ]
+## ProblemStatement serializers moved to companies.serializers
