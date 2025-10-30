@@ -29,7 +29,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Autenticacion JWT: ver seccion siguiente.
 
 ## Autenticacion (JWT)
-- Obtener token: `POST /api/token/` con `{ "username": "<user>", "password": "<pass>" }`
+- Obtener token: `POST /api/token/` con `{ "email": "<email>", "password": "<pass>" }`
 - Refrescar: `POST /api/token/refresh/` con `{ "refresh": "<token>" }`
 - Usa el token en `Authorization: Bearer <access>` en las llamadas a `/api/...`.
 
@@ -41,6 +41,7 @@ Todos los endpoints bajo `/api/` requieren autenticacion (config global `IsAuthe
 
 - Usuarios
   - `GET /api/users/me/`
+  - `POST /api/users/me/change-password/` (cambiar contraseña propia; body: `{ old_password, new_password, new_password2 }`)
   - `GET/POST/PUT/PATCH/DELETE /api/users/`
 
 - Areas y Semestres (solo lectura)
@@ -104,7 +105,7 @@ Todos los endpoints bajo `/api/` requieren autenticacion (config global `IsAuthe
 - Django: `DJANGO_SETTINGS_MODULE`, `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`
 - Base de datos: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`
 - Redis/Celery: `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`
-- Superusuario (si `CREATE_SUPERUSER=1`): `DJANGO_SU_NAME`, `DJANGO_SU_EMAIL`, `DJANGO_SU_PASSWORD`
+- Superusuario (si `CREATE_SUPERUSER=1`): `DJANGO_SU_EMAIL`, `DJANGO_SU_PASSWORD`
 
 ## Desarrollo
 - Los volumenes de Docker persisten datos de MySQL y archivos de usuario en `media/`.

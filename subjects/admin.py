@@ -18,7 +18,7 @@ from .models import (
 class SubjectAdmin(SimpleHistoryAdmin):
     list_display = ("id", "code", "section", "name", "campus", "hours", "api_type", "teacher", "area", "semester")
     list_filter = ( "api_type", "area", "semester", "section")
-    search_fields = ("code", "section", "name", "teacher__username", "teacher__first_name", "teacher__last_name")
+    search_fields = ("code", "section", "name", "teacher__email", "teacher__first_name", "teacher__last_name")
     autocomplete_fields = ("teacher", "area", "semester")
     ordering = ("code", "section")
 

@@ -50,7 +50,6 @@ def main(argv: list[str]) -> int:
     # Require superuser vars only if CREATE_SUPERUSER=1
     if str(env.get("CREATE_SUPERUSER", "0")).lower() in {"1", "true", "yes", "on"}:
         required += [
-            "DJANGO_SU_NAME",
             "DJANGO_SU_EMAIL",
             "DJANGO_SU_PASSWORD",
         ]

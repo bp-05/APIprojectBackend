@@ -77,12 +77,11 @@ def req(name: str) -> str:
         raise SystemExit(f"Missing required env var: {name}")
     return v
 
-username = req("DJANGO_SU_NAME")
 email    = req("DJANGO_SU_EMAIL")
 password = req("DJANGO_SU_PASSWORD")
 
 with transaction.atomic():
-    u, created = User.objects.get_or_create(username=username, defaults={"email": email})
+    u, created = User.objects.get_or_create(email=email)
     if created:
         u.is_staff = True
         u.is_superuser = True
