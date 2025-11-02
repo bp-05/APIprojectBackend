@@ -26,6 +26,10 @@ services:
       RUN_MIGRATIONS: "1"
       CREATE_SUPERUSER: "1"
       WAIT_FOR_MIGRATIONS: "0"
+      # IA local via Ollama
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3:mini}
     volumes:
       - .:/app
       - media_data:/app/media
@@ -35,6 +39,9 @@ services:
       redis:
         condition: service_started
     ports: ["8000:8000"]
+    # En Linux, habilita acceso al host con:
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
 
   worker:
     build: .
@@ -43,7 +50,11 @@ services:
       RUN_MIGRATIONS: "0"
       CREATE_SUPERUSER: "0"
       WAIT_FOR_MIGRATIONS: "1"
-    command: celery -A api_backend worker -l INFO
+      # IA local via Ollama
+      AI_PROVIDER: ${AI_PROVIDER:-ollama}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3:mini}
+    command: celery -A api_backend worker -l INFO -Q celery
     volumes:
       - media_data:/app/media
     depends_on:
@@ -51,6 +62,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+    # En Linux, habilita acceso al host con:
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
 
   beat:
     build: .

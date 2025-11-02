@@ -20,10 +20,11 @@ class Migration(migrations.Migration):
                 ('file', models.FileField(upload_to='descriptors/')),
                 ('is_scanned', models.BooleanField(default=False)),
                 ('text_cache', models.TextField(blank=True)),
+                ('text_distilled', models.TextField(blank=True)),
                 ('meta', models.JSONField(blank=True, default=dict)),
                 ('processed_at', models.DateTimeField(blank=True, null=True)),
                 # removed semester relation after deprecating semesters app
-                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='descriptors', to='subjects.subject')),
+                ('subject', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='descriptors', to='subjects.subject')),
             ],
             options={'constraints': [models.UniqueConstraint(fields=['subject'], name='unique_descriptor_per_subject')]},
         ),

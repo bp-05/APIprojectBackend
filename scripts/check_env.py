@@ -61,6 +61,15 @@ def main(argv: list[str]) -> int:
     if sk in {"your-secret-key-here", "dev-secret", "dev-only-secret-key-change-me"} or len(sk) < 32:
         warnings.append("SECRET_KEY appears weak or placeholder; generate a strong key.")
 
+    # IA local (Ollama) opcional pero recomendada para procesar descriptores
+    if str(env.get("AI_PROVIDER", "ollama")).lower() == "ollama":
+        if not env.get("OLLAMA_BASE_URL"):
+            warnings.append("OLLAMA_BASE_URL not set; defaulting to http://host.docker.internal:11434.")
+        if not env.get("OLLAMA_MODEL"):
+            warnings.append("OLLAMA_MODEL not set; defaulting to phi3:mini.")
+        if not env.get("AI_SCHEMA_VERSION"):
+            warnings.append("AI_SCHEMA_VERSION not set; defaulting to v1.")
+
     if missing:
         print("Missing required variables in .env or environment:")
         for k in missing:

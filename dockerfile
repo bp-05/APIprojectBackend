@@ -5,13 +5,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema necesarias para mysqlclient, pdfplumber, pillow, etc.
+# Dependencias del sistema necesarias para mysqlclient, pillow, etc.
 RUN apt-get update && apt-get install -y \
     build-essential \
     default-libmysqlclient-dev \
     pkg-config \
-    poppler-utils \
-    tesseract-ocr \
     libjpeg-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
