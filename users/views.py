@@ -5,7 +5,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
-from .serializers import UserMeSerializer, UserListSerializer, PasswordChangeSerializer
+from .serializers import (
+    UserMeSerializer,
+    UserListSerializer,
+    UserCreateSerializer,
+    PasswordChangeSerializer,
+    UserAdminUpdateSerializer,
+)
 from .permissions import IsAdminOrReadOnly
 
 User = get_user_model()
@@ -40,4 +46,21 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['email', 'first_name', 'last_name']
     ordering_fields = ['id', 'email', 'date_joined']
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserCreateSerializer
+        if self.action in ('update', 'partial_update'):
+            return UserAdminUpdateSerializer
+        return super().get_serializer_class()
+
     # Create your views here.
+
+    @action(methods=['get'], detail=False, url_path='teachers', permission_classes=[IsAuthenticated])
+    def list_teachers(self, request, *args, **kwargs):
+        user = request.user
+        is_vcm = user.groups.filter(name__in=['vcm']).exists()
+        if not (getattr(user, 'is_staff', False) or getattr(user, 'role', None) in ['ADMIN', 'DAC'] or is_vcm):
+            return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+        qs = User.objects.filter(role='DOC', is_active=True).order_by('first_name', 'last_name', 'email')
+        serializer = UserListSerializer(qs, many=True)
+        return Response(serializer.data)

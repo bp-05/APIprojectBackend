@@ -50,7 +50,7 @@ class SemesterLevel(models.Model):
 
 class Subject(models.Model):
     code = models.CharField(max_length=20) #olbigatorio
-    section = models.CharField(max_length=30, default="1")  # mandatory, text up to 30 chars
+    section = models.CharField(max_length=10, default="1")  # mandatory, default to "1"
     name = models.CharField(max_length=200) #olbigatorio
     campus = models.CharField(max_length=50, default="chillan")
     hours = models.PositiveIntegerField(default=0)

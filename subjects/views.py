@@ -41,7 +41,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(teacher=user)
 
@@ -91,7 +91,7 @@ class SubjectUnitViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -105,7 +105,7 @@ class SubjectTechnicalCompetencyViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -118,7 +118,7 @@ class CompanyBoundaryConditionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -131,7 +131,7 @@ class CompanyRequirementViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -144,7 +144,7 @@ class Api3AlternanceViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -157,7 +157,7 @@ class ApiType2CompletionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -170,7 +170,7 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False ) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -179,3 +179,4 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
 
 
 ## ProblemStatementViewSet movido a companies.views
+

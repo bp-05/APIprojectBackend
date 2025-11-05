@@ -1,4 +1,4 @@
-﻿# API Backend (Django + DRF + Celery)
+# API Backend (Django + DRF + Celery)
 
 Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para autenticación y endpoints para usuarios, áreas/semestres, asignaturas, descriptores y exportación a Excel.
 
@@ -39,7 +39,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Usuarios
   - `GET /api/users/me/`
   - `POST /api/users/me/change-password/`
-  - `GET/POST/PUT/PATCH/DELETE /api/users/`
+  - `GET/POST/PUT/PATCH/DELETE /api/users/` (admin gestiona usuarios)
+  - `GET /api/users/teachers/` (ADMIN, DAC, grupo `vcm`): lista de docentes (rol `DOC`).
 
 - Áreas y Semestres (solo lectura)
   - `GET /api/areas/`, `GET /api/areas/{id}/`
@@ -50,6 +51,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - Filtros: `GET /api/subjects/?code=<CODE>&section=<SECTION>`
   - Detalle por código+sección: `GET /api/subjects/by-code/<CODE>/<SECTION>/`
   - Autocompletado code+section: `GET /api/subjects/code-sections/`
+  - Permisos: `ADMIN`, `DAC` y grupo `vcm` ven todo y pueden crear/editar/borrar; docentes sólo sus propias asignaturas.
+  - Regla: el campo `teacher` sólo acepta usuarios con rol `DOC`.
 
 - Unidades de Asignatura
   - `GET/POST /api/subject-units/`, `GET/PUT/PATCH/DELETE /api/subject-units/{id}/`
@@ -80,17 +83,39 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
 
+## Gestión de Usuarios (detalle)
+
+- Crear usuario (solo ADMIN)
+  - `POST /api/users/`
+  - Body:
+    - `email` (requerido)
+    - `first_name`, `last_name`
+    - `role` (`ADMIN`, `VCM`, `DAC`, `DC`, `DOC`, `COORD`)
+    - `is_active` (bool, opcional)
+    - `password` (requerido)
+    - `password2` (requerido, debe coincidir)
+  - Respuesta: datos del usuario sin contraseña.
+
+- Actualizar usuario (solo ADMIN)
+  - `PUT/PATCH /api/users/{id}/`
+  - Body (cualquier campo admin): `email`, `first_name`, `last_name`, `role`, `is_active`, `is_staff`, `is_superuser`.
+  - Cambio de contraseña opcional: incluir `password` y `password2` (deben coincidir). No se devuelve la contraseña.
+
+- Cambiar mi contraseña (usuario autenticado)
+  - `POST /api/users/me/change-password/`
+  - Body: `old_password`, `new_password`, `new_password2`.
+
 ## Procesamiento de Descriptores (IA)
 
-- Subida y disparo: POST /api/descriptors/ y luego POST /api/descriptors/{id}/process/ (asíncrono con Celery).
+- Subida y disparo: `POST /api/descriptors/` y luego `POST /api/descriptors/{id}/process/` (asíncrono con Celery).
 - Pipeline (local, sin cloud):
   - Extracción local de texto con PyMuPDF (fitz). No se sube el PDF a ningún servicio externo.
   - Envío del texto completo al modelo local en Ollama (una sola llamada) para generar JSON con: subject (solo horas si aparecen), technical_competencies, company_boundary_condition, api_type_2_completion, api_type_3_completion, subject_units.
   - El nombre y código de asignatura (Subject.name/Subject.code) se resuelven SOLO localmente (regex + pool de nombres + nombre del archivo). Si faltan, el descriptor se omite.
   - Normalización: si el LLM usa claves alternativas (SubjectTechnicalCompetency, SubjectUnit.units), se remapea al esquema antes de validar.
-  - Inferencia de área (enum): por nombre detectado → heurísticas de código → sinónimos; si no calza, usa DEFAULT_AREA_IF_UNSURE.
-  - Horas de asignatura: prioridad suma de unit_hours → regex en texto → DEFAULT_SUBJECT_HOURS.
-  - Enriquecimiento PDF‑only de SubjectUnit: si la IA devuelve menos unidades o faltan campos, se extraen de la tabla “Sistema de Evaluación” y líneas “Horas de la Unidad”, poblando evidence, activities y hours por UA. No sobrescribe valores existentes.
+  - Inferencia de área (enum): por nombre detectado • heurísticas de código • sinónimos; si no calza, usa DEFAULT_AREA_IF_UNSURE.
+  - Horas de asignatura: prioridad suma de unit_hours • regex en texto • DEFAULT_SUBJECT_HOURS.
+  - Enriquecimiento PDF-only de SubjectUnit: si la IA devuelve menos unidades o faltan campos, se extraen de la tabla "Sistema de Evaluación" y líneas "Horas de la Unidad", poblando evidence, activities y hours por UA. No sobrescribe valores existentes.
   - Persistencia: crea/actualiza Subject (unicidad code+section), competencias técnicas, unidades, boundary y API2/3.
   - Un descriptor por Subject. Si ya existe uno, el nuevo queda sin vínculo (meta.status=conflict_existing_descriptor).
   - Debug en admin: text_cache (texto extraído) y meta.ai con code_trace, hours_trace y units (incluye enriched_from_pdf y hours_found por UA).

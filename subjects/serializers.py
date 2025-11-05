@@ -37,6 +37,13 @@ class SubjectSerializer(serializers.ModelSerializer):
             )
         ]
 
+    def validate_teacher(self, value):
+        if value is None:
+            return value
+        if getattr(value, 'role', None) != 'DOC':
+            raise serializers.ValidationError('teacher debe ser un usuario con rol DOC')
+        return value
+
 
 class AreaSerializer(serializers.ModelSerializer):
     class Meta:
