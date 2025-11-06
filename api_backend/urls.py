@@ -28,6 +28,7 @@ from users.views import MeViewSet, UserViewSet
 from subjects.views import (
     SubjectViewSet,
     AreaViewSet,
+    CareerViewSet,
     SubjectSemesterViewSet,
     SubjectUnitViewSet,
     SubjectTechnicalCompetencyViewSet,
@@ -50,6 +51,7 @@ router.register(r'users', UserViewSet, basename='users')
 # Other app routes
 router.register(r'subjects', SubjectViewSet, basename='subject')
 router.register(r'areas', AreaViewSet, basename='area')
+router.register(r'careers', CareerViewSet, basename='career')
 router.register(r'subject-semesters', SubjectSemesterViewSet, basename='subject-semester')
 router.register(r'subject-units', SubjectUnitViewSet, basename='subject-unit')
 router.register(r'subject-competencies', SubjectTechnicalCompetencyViewSet, basename='subject-competency')

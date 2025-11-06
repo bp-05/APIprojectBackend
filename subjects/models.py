@@ -39,6 +39,17 @@ class Area(models.Model):
     def __str__(self):
         return self.name
 
+
+class Career(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+    area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='careers')
+
+    class Meta:
+        ordering = ("name",)
+
+    def __str__(self):
+        return self.name
+
 class SemesterLevel(models.Model):
     name = models.CharField(max_length=20, unique=True)
 
@@ -53,6 +64,12 @@ class Subject(models.Model):
     section = models.CharField(max_length=30, default="1")  # mandatory, text up to 30 chars
     name = models.CharField(max_length=200) #olbigatorio
     campus = models.CharField(max_length=50, default="chillan")
+    # Jornada: diurna | vespertina
+    shift = models.CharField(
+        max_length=10,
+        choices=(("diurna", "diurna"), ("vespertina", "vespertina")),
+        default="diurna",
+    )
     hours = models.PositiveIntegerField(default=0)
     api_type = models.PositiveSmallIntegerField(
         default=1,
@@ -66,7 +83,9 @@ class Subject(models.Model):
         null=True,
         blank=True,
     )
-    area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
+    # Mantener vínculo directo a Area (para descriptores) y opcionalmente a Career
+    area = models.ForeignKey('subjects.Area', on_delete=models.PROTECT, related_name='subjects')
+    career = models.ForeignKey('subjects.Career', on_delete=models.PROTECT, related_name='subjects', null=True, blank=True)
     semester = models.ForeignKey('subjects.SemesterLevel', on_delete=models.PROTECT, related_name='subjects') #olbigatorio
 
     class Meta:

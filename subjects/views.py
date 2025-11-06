@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from .models import (
     Subject,
     Area,
+    Career,
     SemesterLevel,
     SubjectUnit,
     SubjectTechnicalCompetency,
@@ -20,6 +21,7 @@ from .models import (
 from .serializers import (
     SubjectSerializer,
     AreaSerializer,
+    CareerSerializer,
     SemesterLevelSerializer,
     SubjectUnitSerializer,
     SubjectTechnicalCompetencySerializer,
@@ -33,7 +35,7 @@ from .permissions import IsSubjectTeacherOrAdmin
 
 
 class SubjectViewSet(viewsets.ModelViewSet):
-    queryset = Subject.objects.all().select_related('teacher', 'area')
+    queryset = Subject.objects.all().select_related('teacher', 'area', 'career')
     serializer_class = SubjectSerializer
     permission_classes = [permissions.IsAuthenticated, IsSubjectTeacherOrAdmin]
     filterset_fields = ['code', 'section']
@@ -74,6 +76,15 @@ class AreaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Area.objects.all().order_by('name')
     serializer_class = AreaSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class CareerViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Career.objects.all().select_related('area').order_by('name')
+    serializer_class = CareerSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['area']
+    search_fields = ['name']
+    ordering_fields = ['name', 'area', 'area__name']
 
 
 class SubjectSemesterViewSet(viewsets.ReadOnlyModelViewSet):

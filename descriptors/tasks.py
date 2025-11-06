@@ -26,6 +26,7 @@ from .ai_service import (
 from subjects.models import (
     Subject,
     Area,
+    Career,
     SemesterLevel,
     SubjectUnit,
     SubjectTechnicalCompetency,

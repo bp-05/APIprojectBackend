@@ -42,6 +42,81 @@ def seed_areas_and_semesters(apps, schema_editor):
         SemesterLevel.objects.get_or_create(name=name)
 
 
+CAREERS_BY_AREA = {
+    "Informatica, Ciberseguridad Y Telecomunicaciones": [
+        "Analista Programador",
+        "Ingeniería en Informática",
+        "Ingeniería en Ciberseguridad",
+        "Ingeniería en Telecomunicaciones y Servicios Digitales",
+        "Técnico en Telecomunicaciones y Servicios Digitales",
+    ],
+    "Automatizacion, Electronica Y Robotica": [
+        "Electricidad Industrial (TNS)",
+        "Electrónica (TNS)",
+        "Ingeniería Eléctrica",
+        "Ingeniería Electrónica y Sistemas Inteligentes",
+        "Ingeniería en Automatización y Robótica",
+    ],
+    "Construccion": [
+        "Técnico en Construcción",
+        "Construcción Civil",
+        "Ingeniería en Construcción",
+    ],
+    "Logistica": [
+        "Técnico en Logística",
+        "Ingeniería en Logística",
+    ],
+    "Mecanica": [
+        "Técnico en Mecánica y Electromovilidad Automotriz",
+        "Ingeniería en Mantenimiento Industrial",
+        "Ingeniería en Maquinaria Pesada y Vehículos Automotrices",
+        "Ingeniería en Mecatrónica",
+    ],
+    "Mineria": [
+        "Técnico en Minería",
+        "Técnico en Prevención de Riesgos y Gestión de Emergencias",
+        "Ingeniería en Minas",
+        "Ingeniería en Metalurgia",
+        "Ingeniería en Mantenimiento de Plantas Mineras",
+        "Técnico en Metalurgia",
+    ],
+    "Agroindustria Y Medioambiente": [
+        "Técnico Agrícola",
+        "Ingeniería Agrícola",
+        "Ingeniería en Medioambiente y Sustentabilidad",
+        "Tecnología en Análisis Químico",
+        "Técnico en Medioambiente y Sustentabilidad",
+    ],
+    "Administracion": [
+        "Administración de Empresas",
+        "Ingeniería en Administración de Empresas",
+        "Contabilidad General",
+        "Comercio Exterior",
+        "Ingeniería en Comercio Exterior (Online)",
+        "Administración Pública (Online)",
+        "Técnico en Administración Pública",
+    ],
+    "Gastronomia": [
+        "Gastronomía",
+        "Administración Gastronómica",
+    ],
+    "Salud": [
+        "Técnico en Enfermería",
+    ],
+}
+
+
+def seed_careers(apps, schema_editor):
+    Area = apps.get_model('subjects', 'Area')
+    Career = apps.get_model('subjects', 'Career')
+    for area_name, careers in CAREERS_BY_AREA.items():
+        area = Area.objects.filter(name=area_name).first()
+        if not area:
+            continue
+        for cname in careers:
+            Career.objects.get_or_create(name=cname, area=area)
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -69,16 +144,27 @@ class Migration(migrations.Migration):
             options={'ordering': ('id',)},
         ),
         migrations.CreateModel(
+            name='Career',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(max_length=150, unique=True)),
+                ('area', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='careers', to='subjects.area')),
+            ],
+            options={'ordering': ('name',)},
+        ),
+        migrations.CreateModel(
             name='Subject',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('code', models.CharField(max_length=20)),
                 ('section', models.CharField(default='1', max_length=30)),
                 ('name', models.CharField(max_length=200)),
+                ('shift', models.CharField(choices=(('diurna', 'diurna'), ('vespertina', 'vespertina')), default='diurna', max_length=10)),
                 ('campus', models.CharField(default='chillan', max_length=50)),
                 ('hours', models.PositiveIntegerField(default=0)),
                 ('api_type', models.PositiveSmallIntegerField(choices=((1, 'Type 1'), (2, 'Type 2'), (3, 'Type 3')), default=1)),
                 ('area', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.area')),
+                ('career', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.career')),
                 ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.semesterlevel')),
                 ('teacher', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to=settings.AUTH_USER_MODEL)),
             ],
@@ -207,5 +293,6 @@ class Migration(migrations.Migration):
             options={'ordering': ('subject',)},
         ),
         migrations.RunPython(seed_areas_and_semesters, migrations.RunPython.noop),
+        migrations.RunPython(seed_careers, migrations.RunPython.noop),
     ]
 

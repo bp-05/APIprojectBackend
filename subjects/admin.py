@@ -3,6 +3,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     Subject,
     Area,
+    Career,
     SemesterLevel,
     SubjectUnit,
     SubjectTechnicalCompetency,
@@ -16,10 +17,10 @@ from .models import (
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "section", "name", "campus", "hours", "api_type", "teacher", "area", "semester")
-    list_filter = ( "api_type", "area", "semester", "section")
+    list_display = ("id", "code", "section", "name", "campus", "hours", "api_type", "teacher", "area", "career", "semester")
+    list_filter = ( "api_type", "area", "career", "semester", "section")
     search_fields = ("code", "section", "name", "teacher__email", "teacher__first_name", "teacher__last_name")
-    autocomplete_fields = ("teacher", "area", "semester")
+    autocomplete_fields = ("teacher", "area", "career", "semester")
     ordering = ("code", "section")
 
 
@@ -27,6 +28,15 @@ class SubjectAdmin(SimpleHistoryAdmin):
 class AreaAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
     search_fields = ("name",)
+    ordering = ("name",)
+
+
+@admin.register(Career)
+class CareerAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "area")
+    search_fields = ("name", "area__name")
+    list_filter = ("area",)
+    autocomplete_fields = ("area",)
     ordering = ("name",)
 
 

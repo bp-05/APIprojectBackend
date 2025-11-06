@@ -44,6 +44,11 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 
 - Áreas y Semestres (solo lectura)
   - `GET /api/areas/`, `GET /api/areas/{id}/`
+  - `GET /api/careers/`, `GET /api/careers/{id}/` (solo lectura)
+    - Filtros: `?area=<id>`
+    - Búsqueda: `?search=<nombre>`
+    - Orden: `?ordering=name` o `?ordering=-name` (también `area`/`area__name`)
+    - Incluye `area` y `area_name` en la respuesta
   - `GET /api/subject-semesters/`, `GET /api/subject-semesters/{id}/`
 
 - Asignaturas
@@ -79,6 +84,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - `GET/POST /api/forms/`, `GET/PUT/PATCH/DELETE /api/forms/{id}/`
   - `GET/POST /api/form-templates/`, `GET/PUT/PATCH/DELETE /api/form-templates/{id}/`
   - `GET/POST /api/descriptors/`, `GET/PUT/PATCH/DELETE /api/descriptors/{id}/`
+    - Permisos: `ADMIN`, `DAC` y grupo `vcm` ven todo y gestionan cualquier descriptor; docentes solo pueden ver/gestionar descriptores de sus propias asignaturas.
 
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
@@ -133,7 +139,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Si no, queda `meta.status=skipped_missing_subject` y se conserva `text_cache` y auditoría en `meta` para depurar.
 
 ## Notas de Subject
-- Campos: `code`, `section` (default "1"), `name`, `campus` (default "chillan"), `hours` (int, default 0), `api_type` (1,2,3), `teacher` (opcional), `area` (FK), `semester` (FK).
+- Campos: `code`, `section` (default "1"), `name`, `campus` (default "chillan"), `shift` ("diurna" | "vespertina", default "diurna"), `hours` (int, default 0), `api_type` (1,2,3), `teacher` (opcional), `area` (FK), `career` (FK, opcional), `semester` (FK).
+  - `area` siempre presente (útil para descriptores). `career` es opcional y pertenece a un `Area`.
 - Unicidad: par (`code`, `section`). El `code` por sí solo no es único.
 
 ## Semillas (migración inicial)

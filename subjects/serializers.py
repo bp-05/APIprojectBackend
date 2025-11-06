@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from .models import (
     Subject,
     Area,
+    Career,
     SemesterLevel,
     SubjectUnit,
     SubjectTechnicalCompetency,
@@ -21,11 +22,12 @@ ProblemStatement and CounterpartContact serializers were moved to companies.seri
 class SubjectSerializer(serializers.ModelSerializer):
     teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
     area_name = serializers.CharField(source='area.name', read_only=True)
+    career_name = serializers.CharField(source='career.name', read_only=True)
     semester_name = serializers.CharField(source='semester.name', read_only=True)
 
     class Meta:
         model = Subject
-        fields = ['id', 'code', 'section', 'name', 'campus', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'semester', 'semester_name']
+        fields = ['id', 'code', 'section', 'name', 'campus', 'shift', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'career', 'career_name', 'semester', 'semester_name']
         extra_kwargs = {
             'teacher': {'required': False, 'allow_null': True},
         }
@@ -49,6 +51,14 @@ class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = ['id', 'name']
+
+
+class CareerSerializer(serializers.ModelSerializer):
+    area_name = serializers.CharField(source='area.name', read_only=True)
+
+    class Meta:
+        model = Career
+        fields = ['id', 'name', 'area', 'area_name']
 
 
 class SemesterLevelSerializer(serializers.ModelSerializer):
