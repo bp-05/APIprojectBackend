@@ -1,5 +1,6 @@
 ﻿import os
 import json
+import logging
 import unicodedata
 import requests
 from typing import Any, Dict, List, Optional, Tuple
@@ -562,13 +563,30 @@ class AIExtractor:
             "stream": False,
         }
         try:
+            logging.info(
+                "AI(Ollama) request model=%s temp=%s ctx=%s predict=%s",
+                model,
+                temperature,
+                self.cfg.get("num_ctx"),
+                self.cfg.get("num_predict"),
+            )
             r = requests.post(url, json=payload, timeout=timeout)
             r.raise_for_status()
             body = r.json()
             raw_text = body.get("response") if isinstance(body, dict) else None
             data = self._safe_load_json(raw_text)
+            if isinstance(body, dict):
+                logging.info(
+                    "AI(Ollama) done model=%s eval_count=%s eval_ms=%s prompt_ms=%s load_ms=%s",
+                    model,
+                    body.get("eval_count"),
+                    body.get("eval_duration"),
+                    body.get("prompt_eval_duration"),
+                    body.get("load_duration"),
+                )
             return data, raw_text
         except Exception as e:
+            logging.error("AI(Ollama) error: %s", e)
             return {}, f"error: {e}"
 
     def _openai_generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:
@@ -591,14 +609,24 @@ class AIExtractor:
             "response_format": {"type": "json_object"},
         }
         try:
+            logging.info("AI(OpenAI) request model=%s temp=%s", model, temperature)
             r = requests.post(url, headers=headers, json=payload, timeout=timeout)
             r.raise_for_status()
             resp = r.json()
             raw = json.dumps(resp)
             content = resp.get("choices", [{}])[0].get("message", {}).get("content")
             data = self._safe_load_json(content)
+            usage = resp.get("usage") or {}
+            logging.info(
+                "AI(OpenAI) done model=%s total=%s prompt=%s completion=%s",
+                model,
+                usage.get("total_tokens"),
+                usage.get("prompt_tokens"),
+                usage.get("completion_tokens"),
+            )
             return data, raw
         except Exception as e:
+            logging.error("AI(OpenAI) error: %s", e)
             return {}, f"error: {e}"
 
     def _generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:

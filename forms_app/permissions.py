@@ -4,6 +4,6 @@ class IsFormOwnerOrCoordinator(BasePermission):
         user = request.user
         if not user.is_authenticated:
             return False
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False) or getattr(user, 'role', None) == 'VCM' or user.groups.filter(name__in=['vcm']).exists():
             return True
         return obj.subject.teacher_id == user.id

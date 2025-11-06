@@ -22,7 +22,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 # Import user views
-from users.views import MeViewSet, UserViewSet
+from users.views import MeViewSet, UserViewSet, TeachersViewSet
 
 # Import other app views
 from subjects.views import (
@@ -47,6 +47,7 @@ router = DefaultRouter()
 # User routes
 router.register(r'users/me', MeViewSet, basename='users-me')
 router.register(r'users', UserViewSet, basename='users')
+router.register(r'teachers', TeachersViewSet, basename='teachers')
 
 # Other app routes
 router.register(r'subjects', SubjectViewSet, basename='subject')

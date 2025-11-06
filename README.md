@@ -41,6 +41,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - `POST /api/users/me/change-password/`
   - `GET/POST/PUT/PATCH/DELETE /api/users/` (admin gestiona usuarios)
   - `GET /api/users/teachers/` (ADMIN, DAC, grupo `vcm`): lista de docentes (rol `DOC`).
+  - `GET/POST/PUT/PATCH/DELETE /api/teachers/` (ADMIN, DAC): gestión segura de docentes (rol `DOC`). Se fuerza `role='DOC'` y se limitan campos a `email`, `first_name`, `last_name`, `is_active` y `password`.
 
 - Áreas y Semestres (solo lectura)
   - `GET /api/areas/`, `GET /api/areas/{id}/`

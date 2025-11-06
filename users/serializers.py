@@ -102,3 +102,60 @@ class PasswordChangeSerializer(serializers.Serializer):
             raise serializers.ValidationError({"new_password2": "Las contraseñas no coinciden"})
         validate_password(attrs['new_password'], user=self.context['request'].user)
         return attrs
+
+
+class TeacherManageSerializer(serializers.ModelSerializer):
+    """Serializer para crear/editar docentes por ADMIN o DAC.
+
+    - En create: requiere password/password2 y fuerza role='DOC'.
+    - En update: password/password2 son opcionales; no permite cambiar role/is_staff/is_superuser.
+    """
+    password = serializers.CharField(write_only=True, required=False)
+    password2 = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'first_name', 'last_name',
+            'is_active', 'password', 'password2'
+        ]
+        read_only_fields = ['id']
+
+    def validate(self, attrs):
+        creating = self.instance is None
+        p1 = attrs.get('password')
+        p2 = attrs.get('password2')
+        if creating:
+            if not p1 or not p2:
+                raise serializers.ValidationError({"password": "Debes enviar password y password2"})
+        if (p1 is None) ^ (p2 is None):
+            raise serializers.ValidationError({"password2": "Debes enviar password y password2"})
+        if p1 is not None:
+            if p1 != p2:
+                raise serializers.ValidationError({"password2": "Las contraseñas no coinciden"})
+            validate_password(p1)
+        return attrs
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        validated_data.pop('password2', None)
+        # Fuerza el rol docente
+        user = User.objects.create(role='DOC', **validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        validated_data.pop('password2', None)
+        # Campos permitidos
+        for field in ['email', 'first_name', 'last_name', 'is_active']:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+        # Enforce role DOC
+        if getattr(instance, 'role', None) != 'DOC':
+            instance.role = 'DOC'
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance

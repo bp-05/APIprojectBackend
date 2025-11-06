@@ -14,14 +14,18 @@ class DescriptorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-        if getattr(user, 'is_staff', False) or getattr(user, 'role', None) == 'DAC' or user.groups.filter(name__in=['vcm']).exists():
+        if (
+            getattr(user, 'is_staff', False)
+            or getattr(user, 'role', None) in ['DAC', 'VCM']
+            or user.groups.filter(name__in=['vcm']).exists()
+        ):
             return qs
         return qs.filter(subject__teacher=user)
 
     def _has_elevated_access(self, user):
         return (
             getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['ADMIN', 'DAC']
+            or getattr(user, 'role', None) in ['ADMIN', 'DAC', 'VCM']
             or user.groups.filter(name__in=['vcm']).exists()
         )
 

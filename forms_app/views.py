@@ -26,7 +26,7 @@ class FormInstanceViewSet(viewsets.ModelViewSet):
             qs = qs.filter(subject__code=subject)
         if template:
             qs = qs.filter(template__key=template)
-        if getattr(user, 'is_staff', False) or user.groups.filter(name__in=['vcm']).exists():
+        if getattr(user, 'is_staff', False) or getattr(user, 'role', None) == 'VCM' or user.groups.filter(name__in=['vcm']).exists():
             return qs
         return qs.filter(subject__teacher=user)
 
@@ -41,7 +41,7 @@ class FormInstanceViewSet(viewsets.ModelViewSet):
 
     @decorators.action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
-        if not (request.user.is_staff or request.user.groups.filter(name__in=['vcm']).exists()):
+        if not (request.user.is_staff or getattr(request.user, 'role', None) == 'VCM' or request.user.groups.filter(name__in=['vcm']).exists()):
             return response.Response({'detail': 'No autorizado.'}, status=403)
         obj = self.get_object()
         obj.status = 'approved'
