@@ -194,6 +194,10 @@ def get_ai_env() -> Dict[str, Any]:
         "num_ctx": (int(env.get("OLLAMA_NUM_CTX")) if env.get("OLLAMA_NUM_CTX") else None),
         "num_predict": (int(env.get("OLLAMA_NUM_PREDICT")) if env.get("OLLAMA_NUM_PREDICT") else None),
         "keep_alive": env.get("OLLAMA_KEEP_ALIVE"),
+        # OpenAI (opcional)
+        "openai_api_key": env.get("OPENAI_API_KEY"),
+        "openai_base_url": env.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        "openai_model": env.get("OPENAI_MODEL", env.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")),
         "schema_version": env.get("AI_SCHEMA_VERSION", "v1"),
         # Defaults for Subject creation
         "default_section": env.get("DEFAULT_SUBJECT_SECTION", "1"),
@@ -567,6 +571,41 @@ class AIExtractor:
         except Exception as e:
             return {}, f"error: {e}"
 
+    def _openai_generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        api_key = self.cfg.get("openai_api_key")
+        base_url = (self.cfg.get("openai_base_url") or "").rstrip("/")
+        model = self.cfg.get("openai_model")
+        temperature = self.cfg.get("temperature")
+        timeout = self.cfg.get("timeout", 60)
+        if not api_key:
+            return {}, "error: OPENAI_API_KEY missing"
+        url = f"{base_url}/chat/completions"
+        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": (user_prompt + ("\n\nTexto del descriptor (completo):\n" + full_text if full_text else ""))},
+            ],
+            "temperature": temperature,
+            "response_format": {"type": "json_object"},
+        }
+        try:
+            r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+            r.raise_for_status()
+            resp = r.json()
+            raw = json.dumps(resp)
+            content = resp.get("choices", [{}])[0].get("message", {}).get("content")
+            data = self._safe_load_json(content)
+            return data, raw
+        except Exception as e:
+            return {}, f"error: {e}"
+
+    def _generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:
+        if (self.provider or "ollama").lower() == "openai":
+            return self._openai_generate_json(sys_prompt, user_prompt, full_text)
+        return self._ollama_generate_json(sys_prompt, user_prompt, full_text)
+
     def extract_from_text(self, full_text: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # Orden solicitado: primero el texto, luego instrucciones, y al final la especificaciÃ³n
         sys_prompt = build_system_prompt()
@@ -575,7 +614,7 @@ class AIExtractor:
             "Texto del descriptor (completo):\n" + full_text + "\n\n" + user_instr + "\n\n"
             "Devuelve SOLO un objeto JSON vÃ¡lido con las claves esperadas."
         )
-        data, raw = self._ollama_generate_json(sys_prompt, combined, "")
+        data, raw = self._generate_json(sys_prompt, combined, "")
         return data, {"model": self.cfg["model"], "inline_text": True, "raw_text": (raw[:2000] if raw else None)}
 
     def extract_name_code_from_pdf(self, file_path: str) -> Optional[Tuple[str, str]]:
@@ -673,6 +712,6 @@ class AIExtractor:
             + build_user_prompt() + "\n" + json_spec + "\n"
             + "Devuelve SOLO ese objeto JSON."
         )
-        # Pasamos el texto ya incluido; no repetirlo en _ollama_generate_json
-        data, raw = self._ollama_generate_json(sys_prompt, user_prompt, "")
+        # Pasamos el texto ya incluido; no repetirlo de nuevo
+        data, raw = self._generate_json(sys_prompt, user_prompt, "")
         return data, {"model": self.cfg["model"], "inline_text": True, "raw_text": (raw[:2000] if raw else None)}

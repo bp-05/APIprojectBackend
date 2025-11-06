@@ -89,6 +89,20 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
 
+## Proveedor de IA
+- Configurable por `.env` con `AI_PROVIDER`:
+  - `ollama` (por defecto): usa un servidor Ollama local o remoto.
+    - `OLLAMA_BASE_URL` (ej.: `http://host.docker.internal:11434`)
+    - `OLLAMA_MODEL` (ej.: `llama3.2:3b-instruct-q4_K_M` o `llama3.1:8b`)
+    - `OLLAMA_NUM_CTX`, `OLLAMA_NUM_PREDICT`, `OLLAMA_KEEP_ALIVE`
+  - `openai`: usa la API de OpenAI.
+    - `OPENAI_API_KEY`
+    - `OPENAI_MODEL` (ej.: `gpt-4o-mini`)
+    - `OPENAI_BASE_URL` (opcional; default `https://api.openai.com/v1`)
+- Variables comunes:
+  - `LLM_TEMPERATURE` (recomendado `0` para JSON estable)
+  - `LLM_TIMEOUT_SECONDS`
+
 ## Gestión de Usuarios (detalle)
 
 - Crear usuario (solo ADMIN)

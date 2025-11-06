@@ -41,4 +41,5 @@ vine==5.1.0
 wcwidth==0.2.14
 pymupdf>=1.24.10
 requests>=2.32.0
+openai>=1.40.0
 
