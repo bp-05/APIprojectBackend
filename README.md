@@ -84,8 +84,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Formularios y Descriptores
   - `GET/POST /api/forms/`, `GET/PUT/PATCH/DELETE /api/forms/{id}/`
   - `GET/POST /api/form-templates/`, `GET/PUT/PATCH/DELETE /api/form-templates/{id}/`
-  - `GET/POST /api/descriptors/`, `GET/PUT/PATCH/DELETE /api/descriptors/{id}/`
-    - Permisos: `ADMIN`, `DAC` y grupo `vcm` ven todo y gestionan cualquier descriptor; docentes solo pueden ver/gestionar descriptores de sus propias asignaturas.
+- `GET/POST /api/descriptors/`, `GET/PUT/PATCH/DELETE /api/descriptors/{id}/`
+- Permisos: `ADMIN`, `DAC`, `COORD` y grupo `vcm` ven todo; docentes solo pueden ver/gestionar descriptores de sus propias asignaturas.
 
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
