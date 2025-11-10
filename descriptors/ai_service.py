@@ -2,7 +2,15 @@
 import json
 import logging
 import unicodedata
+import time
+import random
+from datetime import datetime
 import requests
+from email.utils import parsedate_to_datetime
+try:
+    import redis  # type: ignore
+except Exception:  # pragma: no cover
+    redis = None  # type: ignore
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
@@ -199,6 +207,14 @@ def get_ai_env() -> Dict[str, Any]:
         "openai_api_key": env.get("OPENAI_API_KEY"),
         "openai_base_url": env.get("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         "openai_model": env.get("OPENAI_MODEL", env.get("OPENAI_CHAT_MODEL", "gpt-4o-mini")),
+        # Rate limit OpenAI (opcional)
+        "openai_rpm": int(env.get("OPENAI_RPM")) if env.get("OPENAI_RPM") else None,
+        "openai_tpm": int(env.get("OPENAI_TPM")) if env.get("OPENAI_TPM") else None,
+        "openai_est_completion_tokens": int(env.get("OPENAI_EST_COMPLETION_TOKENS", "1200")),
+        "openai_min_interval_seconds": int(env.get("OPENAI_MIN_INTERVAL_SECONDS", "0")),
+        "openai_retry_after_cap": float(env.get("OPENAI_RETRY_AFTER_CAP", "60")),
+        "openai_wait_on_429": str(env.get("OPENAI_WAIT_ON_429", "1")).lower() in {"1", "true", "yes", "on"},
+        "redis_url": env.get("OPENAI_REDIS_URL") or env.get("CELERY_BROKER_URL", "redis://redis:6379/0"),
         "schema_version": env.get("AI_SCHEMA_VERSION", "v1"),
         # Defaults for Subject creation
         "default_section": env.get("DEFAULT_SUBJECT_SECTION", "1"),
@@ -484,6 +500,8 @@ class AIExtractor:
         cfg = get_ai_env()
         self.cfg = cfg
         self.provider = cfg.get("provider", "ollama")
+        # Guarda el último uso reportado por el proveedor (tokens, modelo, etc.)
+        self.last_usage: Optional[Dict[str, Any]] = None
 
     def extract_pdf_text(self, file_path: str, max_chars: int = 200_000) -> str:
         if not fitz:
@@ -575,6 +593,12 @@ class AIExtractor:
             body = r.json()
             raw_text = body.get("response") if isinstance(body, dict) else None
             data = self._safe_load_json(raw_text)
+            # Registrar uso de forma consistente (aunque Ollama no entregue tokens compatibles)
+            self.last_usage = {
+                "provider": "ollama",
+                "model": model,
+                "eval_count": (body or {}).get("eval_count") if isinstance(body, dict) else None,
+            }
             if isinstance(body, dict):
                 logging.info(
                     "AI(Ollama) done model=%s eval_count=%s eval_ms=%s prompt_ms=%s load_ms=%s",
@@ -587,6 +611,7 @@ class AIExtractor:
             return data, raw_text
         except Exception as e:
             logging.error("AI(Ollama) error: %s", e)
+            self.last_usage = {"provider": "ollama", "model": model}
             return {}, f"error: {e}"
 
     def _openai_generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:
@@ -608,26 +633,190 @@ class AIExtractor:
             "temperature": temperature,
             "response_format": {"type": "json_object"},
         }
+        # Intervalo mínimo entre llamadas (fail-fast si falta esperar)
         try:
-            logging.info("AI(OpenAI) request model=%s temp=%s", model, temperature)
-            r = requests.post(url, headers=headers, json=payload, timeout=timeout)
-            r.raise_for_status()
-            resp = r.json()
-            raw = json.dumps(resp)
-            content = resp.get("choices", [{}])[0].get("message", {}).get("content")
-            data = self._safe_load_json(content)
-            usage = resp.get("usage") or {}
-            logging.info(
-                "AI(OpenAI) done model=%s total=%s prompt=%s completion=%s",
-                model,
-                usage.get("total_tokens"),
-                usage.get("prompt_tokens"),
-                usage.get("completion_tokens"),
-            )
-            return data, raw
-        except Exception as e:
-            logging.error("AI(OpenAI) error: %s", e)
-            return {}, f"error: {e}"
+            if not self.cfg.get("openai_wait_on_429", True):
+                raise Exception("wait_on_429 disabled; skip min-interval check")
+            min_int = int(self.cfg.get("openai_min_interval_seconds") or 0)
+            if min_int > 0 and 'redis' in globals() and redis is not None:
+                try:
+                    rcli = redis.from_url(self.cfg.get("redis_url"))
+                except Exception:
+                    rcli = None
+                if rcli is not None:
+                    last_ts_key = "openai:last_ts"
+                    try:
+                        v = rcli.get(last_ts_key)
+                        last_ts = int(v) if v else None
+                    except Exception:
+                        last_ts = None
+                    now_ts = int(time.time())
+                    if last_ts is not None:
+                        remain = (last_ts + int(min_int)) - now_ts
+                        if remain > 0:
+                            # Devolver rate_limited para reprogramar en Celery
+                            self.last_usage = {
+                                "provider": "openai",
+                                "model": model,
+                                "rate_limited": True,
+                                "retry_in": int(remain),
+                                "reason": "min_interval",
+                            }
+                            logging.warning("AI(OpenAI) min-interval hit: retry in %ss", remain)
+                            return {}, "error: rate_limited(min_interval)"
+        except Exception:
+            pass
+
+        # Rate limit (Redis) previo si hay RPM/TPM configurados
+        try:
+            if not self.cfg.get("openai_wait_on_429", True):
+                raise Exception("wait_on_429 disabled; skip pre-rate-limit")
+            rpm = self.cfg.get("openai_rpm")
+            tpm = self.cfg.get("openai_tpm")
+            if (rpm is not None or tpm is not None) and 'redis' in globals() and redis is not None:
+                try:
+                    rcli = redis.from_url(self.cfg.get("redis_url"))
+                except Exception:
+                    rcli = None
+                if rcli is not None:
+                    # Estimar tokens de entrada y salida
+                    msgs = payload.get("messages") or []
+                    total_chars = 0
+                    for m in msgs:
+                        c = m.get("content") or ""
+                        total_chars += len(str(c))
+                    est_in = max(1, total_chars // 4)
+                    est_out = int(self.cfg.get("openai_est_completion_tokens") or 1200)
+                    now = time.time()
+                    window = int(now // 60)
+                    sleep_for = 0.0
+                    if rpm is not None:
+                        k = f"openai:rl:rpm:{window}"
+                        try:
+                            cur = rcli.incr(k)
+                            if cur == 1:
+                                rcli.expire(k, 65)
+                            if cur > int(rpm):
+                                sleep_for = max(sleep_for, 60 - (now % 60) + random.uniform(0, 0.3))
+                        except Exception:
+                            pass
+                    if tpm is not None:
+                        k2 = f"openai:rl:tpm:{window}"
+                        need = int(est_in) + int(est_out)
+                        try:
+                            cur_tok = rcli.incrby(k2, need)
+                            if cur_tok == need:
+                                rcli.expire(k2, 65)
+                            if cur_tok > int(tpm):
+                                sleep_for = max(sleep_for, 60 - (now % 60) + random.uniform(0, 0.3))
+                        except Exception:
+                            pass
+                    if sleep_for > 0.05:
+                        logging.info("AI(OpenAI) rate-limit sleep %.2fs (rpm=%s, tpm=%s)", sleep_for, rpm, tpm)
+                        time.sleep(sleep_for)
+        except Exception:
+            pass
+
+        # Reintentos con backoff y lectura de Retry-After
+        max_retries = 4 if self.cfg.get("openai_wait_on_429", True) else 0
+        base_delay = 15.0
+        attempt = 0
+        last_error: Optional[Exception] = None
+        while attempt <= max_retries:
+            try:
+                logging.info("AI(OpenAI) request model=%s temp=%s", model, temperature)
+                r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+                r.raise_for_status()
+                resp = r.json()
+                raw = json.dumps(resp)
+                content = resp.get("choices", [{}])[0].get("message", {}).get("content")
+                data = self._safe_load_json(content)
+                usage = resp.get("usage") or {}
+                # Normaliza nombres de campos para exponerlos externamente
+                prompt_tokens = usage.get("prompt_tokens") or usage.get("input_tokens")
+                completion_tokens = usage.get("completion_tokens") or usage.get("output_tokens")
+                total_tokens = usage.get("total_tokens")
+                # Deja disponible para quien llame
+                self.last_usage = {
+                    "provider": "openai",
+                    "model": model,
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "total_tokens": total_tokens,
+                }
+                logging.info(
+                    "AI(OpenAI) done model=%s total=%s prompt=%s completion=%s",
+                    model,
+                    total_tokens,
+                    prompt_tokens,
+                    completion_tokens,
+                )
+                # Actualizar marca de tiempo para intervalo mínimo
+                try:
+                    if 'redis' in globals() and redis is not None:
+                        rcli = redis.from_url(self.cfg.get("redis_url"))
+                        rcli.set("openai:last_ts", int(time.time()), ex=86400)
+                except Exception:
+                    pass
+                return data, raw
+            except requests.HTTPError as e:
+                status = getattr(e.response, "status_code", None)
+                if status in (429,) or (status and 500 <= int(status) <= 599):
+                    if not self.cfg.get("openai_wait_on_429", True):
+                        # Comportamiento "sin espera": no dormir ni reintentar, falla rápido
+                        last_error = e
+                        break
+                    retry_after = 0.0
+                    try:
+                        ra = e.response.headers.get("Retry-After") if e.response is not None else None
+                        if ra:
+                            # Puede venir en segundos, milisegundos o como fecha HTTP.
+                            val: Optional[float] = None
+                            # Intentar como número (permite punto decimal)
+                            try:
+                                if isinstance(ra, str) and ra.replace('.', '', 1).isdigit():
+                                    val = float(ra)
+                            except Exception:
+                                val = None
+                            if val is not None:
+                                # Si parece milisegundos (valor muy grande), convertir a segundos
+                                if val > 10000:  # > ~2.7h en segundos; probablemente ms
+                                    val = val / 1000.0
+                                retry_after = max(0.0, val)
+                            else:
+                                # Intentar como fecha HTTP
+                                try:
+                                    dt = parsedate_to_datetime(ra)
+                                    # Usar UTC para delta
+                                    now_dt = datetime.utcnow().replace(tzinfo=dt.tzinfo)
+                                    delta = (dt - now_dt).total_seconds()
+                                    if delta and delta > 0:
+                                        retry_after = float(delta)
+                                except Exception:
+                                    pass
+                        # Fallback razonable si no se pudo interpretar
+                        if not retry_after:
+                            retry_after = 15.0
+                    except Exception:
+                        pass
+                    # Si el servidor entregó Retry-After, usar exactamente ese tiempo.
+                    # Si no, usar backoff exponencial con jitter.
+                    if retry_after and retry_after > 0:
+                        wait = retry_after
+                    else:
+                        wait = base_delay * (2 ** attempt) + random.uniform(0, 1.0)
+                    attempt += 1
+                    logging.warning("AI(OpenAI) %s - retry in %.1fs (attempt %s/%s)", status, wait, attempt, max_retries)
+                    time.sleep(wait)
+                    continue
+                last_error = e
+                break
+            except Exception as e:
+                last_error = e
+                break
+        logging.error("AI(OpenAI) error: %s", last_error)
+        self.last_usage = {"provider": "openai", "model": model}
+        return {}, f"error: {last_error}"
 
     def _generate_json(self, sys_prompt: str, user_prompt: str, full_text: str) -> Tuple[Dict[str, Any], Optional[str]]:
         if (self.provider or "ollama").lower() == "openai":
@@ -643,7 +832,14 @@ class AIExtractor:
             "Devuelve SOLO un objeto JSON vÃ¡lido con las claves esperadas."
         )
         data, raw = self._generate_json(sys_prompt, combined, "")
-        return data, {"model": self.cfg["model"], "inline_text": True, "raw_text": (raw[:2000] if raw else None)}
+        usage_info: Dict[str, Any] = {
+            "model": (self.cfg.get("openai_model") if (self.provider or "").lower() == "openai" else self.cfg.get("model")),
+            "inline_text": True,
+            "raw_text": (raw[:2000] if raw else None),
+        }
+        if isinstance(self.last_usage, dict):
+            usage_info.update(self.last_usage)
+        return data, usage_info
 
     def extract_name_code_from_pdf(self, file_path: str) -> Optional[Tuple[str, str]]:
         """Extrae (nombre, codigo) localmente desde el PDF.
@@ -742,4 +938,11 @@ class AIExtractor:
         )
         # Pasamos el texto ya incluido; no repetirlo de nuevo
         data, raw = self._generate_json(sys_prompt, user_prompt, "")
-        return data, {"model": self.cfg["model"], "inline_text": True, "raw_text": (raw[:2000] if raw else None)}
+        usage_info: Dict[str, Any] = {
+            "model": (self.cfg.get("openai_model") if (self.provider or "").lower() == "openai" else self.cfg.get("model")),
+            "inline_text": True,
+            "raw_text": (raw[:2000] if raw else None),
+        }
+        if isinstance(self.last_usage, dict):
+            usage_info.update(self.last_usage)
+        return data, usage_info

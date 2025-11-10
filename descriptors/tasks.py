@@ -1,4 +1,5 @@
-﻿import logging
+# -*- coding: latin-1 -*-
+import logging
 from typing import Any, Dict, List, Optional
 try:
     import fitz  # PyMuPDF
@@ -143,7 +144,7 @@ def process_descriptor(descriptor_id: int):
         return None
 
     def _find_eval_section(text: str) -> Optional[str]:
-        """Devuelve un segmento del texto a partir de 'Sistema de Evaluación' (normalizado) si existe."""
+        """Devuelve un segmento del texto a partir de 'Sistema de Evaluaci�n' (normalizado) si existe."""
         if not text:
             return None
         import unicodedata as _ud
@@ -162,7 +163,7 @@ def process_descriptor(descriptor_id: int):
         return text[start:end]
 
     def _parse_units_from_eval_table(text: Optional[str]) -> Dict[int, Dict[str, Any]]:
-        """Intenta extraer por UA (1..4) Evidencia y Situación de Evaluación desde la sección 'Sistema de Evaluación'."""
+        """Intenta extraer por UA (1..4) Evidencia y Situaci�n de Evaluaci�n desde la secci�n 'Sistema de Evaluaci�n'."""
         out: Dict[int, Dict[str, Any]] = {}
         if not text:
             return out
@@ -179,11 +180,11 @@ def process_descriptor(descriptor_id: int):
             blk = m.group(1)
             ev = None
             sit = None
-            # Evidencia: línea o párrafo posterior a la etiqueta 'Evidencia'
-            me = re.search(r"(?is)Evidenc(?:ia)?\s*[:\-]?\s*(.+?)(?=\n\s*[A-ZÁÉÍÓÚa-záéíóú].{0,20}:|\n\s*UA\s*\d|\Z)", blk)
+            # Evidencia: l�nea o p�rrafo posterior a la etiqueta 'Evidencia'
+            me = re.search(r"(?is)Evidenc(?:ia)?\s*[:\-]?\s*(.+?)(?=\n\s*[A-Z�����a-z�����].{0,20}:|\n\s*UA\s*\d|\Z)", blk)
             if me:
                 ev = _coerce_to_text(me.group(1)).strip()
-            ms = re.search(r"(?is)Situaci[oó]n\s+de\s+Evaluaci[oó]n\s*[:\-]?\s*(.+?)(?=\n\s*[A-ZÁÉÍÓÚa-záéíóú].{0,20}:|\n\s*UA\s*\d|\Z)", blk)
+            ms = re.search(r"(?is)Situaci[o�]n\s+de\s+Evaluaci[o�]n\s*[:\-]?\s*(.+?)(?=\n\s*[A-Z�����a-z�����].{0,20}:|\n\s*UA\s*\d|\Z)", blk)
             if ms:
                 sit = _coerce_to_text(ms.group(1)).strip()
             # Criterios: si aparecen 1.1.1 etc., anexarlos a 'sit'
@@ -207,13 +208,13 @@ def process_descriptor(descriptor_id: int):
     # --- PDF-only SubjectUnit enrichment helpers ---
     def _replace_ligatures(s: str) -> str:
         return (
-            s.replace("ﬁ", "fi")
-            .replace("ﬂ", "fl")
-            .replace("ﬃ", "ffi")
-            .replace("ﬄ", "ffl")
-            .replace("’", "'")
-            .replace("“", '"')
-            .replace("”", '"')
+            s.replace("?", "fi")
+            .replace("?", "fl")
+            .replace("?", "ffi")
+            .replace("?", "ffl")
+            .replace("�", "'")
+            .replace("�", '"')
+            .replace("�", '"')
         )
 
     def _normalize_pdf_text(s: Optional[str]) -> str:
@@ -223,14 +224,14 @@ def process_descriptor(descriptor_id: int):
         s = _replace_ligatures(s)
         s = s.replace("\r\n", "\n").replace("\r", "\n")
         s = _re.sub(r"(\w)-\s*\n\s*(\w)", r"\1\2", s)  # deshifenado
-        s = s.replace("", " ")
+        s = s.replace("?", " ")
         s = _re.sub(r"[ \t]+\n", "\n", s)
         s = _re.sub(r"[ \t]{2,}", " ", s)
         return s
 
     def _anchor_eval_section(text: str) -> int:
         import re as _re
-        for a in (r"sistema\s+de\s+evaluaci[oó]n", r"sistema\s+de\s+evaluacion"):
+        for a in (r"sistema\s+de\s+evaluaci[o�]n", r"sistema\s+de\s+evaluacion"):
             m = _re.search(a, text, _re.IGNORECASE)
             if m:
                 return m.start()
@@ -253,7 +254,7 @@ def process_descriptor(descriptor_id: int):
         import re as _re
         idx = _anchor_eval_section(text)
         seg = text[idx:] if idx >= 0 else text
-        rx = _re.compile(r"(?m)^\s*(\d{1,2})(?!\.)\s+([A-ZÁÉÍÓÚÑ][^:\n]{2,200})\s*$")
+        rx = _re.compile(r"(?m)^\s*(\d{1,2})(?!\.)\s+([A-Z������][^:\n]{2,200})\s*$")
         out: Dict[str, str] = {}
         pos: Dict[str, int] = {}
         for m in rx.finditer(seg):
@@ -270,24 +271,24 @@ def process_descriptor(descriptor_id: int):
     _SANITIZE_PREFIXES_LOWER = tuple(
         p.lower()
         for p in (
-            "Rúbrica",
+            "R�brica",
             "Rubrica",
-            "Escala de apreciación",
+            "Escala de apreciaci�n",
             "Escala de apreciacion",
             "PERFIL DOCENTE",
             "PREFERENCIA",
-            "OBSERVACIÓN",
-            "Observación",
+            "OBSERVACI�N",
+            "Observaci�n",
             "Esta unidad de aprendizaje",
             "UA ESTRATEGIA",
-            "ESTRATEGIA DIDÁCTICA",
+            "ESTRATEGIA DID�CTICA",
             "ESTRATEGIA DIDACTICA",
         )
     )
 
     def _strip_inline_admin_tokens(s: str) -> str:
         import re as _re
-        return _re.sub(r"\s*(?:R[úu]brica|Escala de apreciaci[oó]n)\b.*$", "", s, flags=_re.IGNORECASE)
+        return _re.sub(r"\s*(?:R[�u]brica|Escala de apreciaci[o�]n)\b.*$", "", s, flags=_re.IGNORECASE)
 
     def _sanitize_text_block(s: str) -> str:
         import re as _re
@@ -308,7 +309,7 @@ def process_descriptor(descriptor_id: int):
         import re as _re
         pat = _re.compile(
             r"(?ms)^\s*(?P<ua>\d{1,2})\.(?P<sec>\d+)\.(?P<sub>\d+)\s+(?P<body>.+?)"
-            r"(?=^\s*\d{1,2}\.\d+\.\d+\s+|^\s*(?:Los|Las|El|La)\s+estudiante[s]?|^\s*\d+\s*[\.\)]\s+[A-ZÁÉÍÓÚÑ]|\Z)",
+            r"(?=^\s*\d{1,2}\.\d+\.\d+\s+|^\s*(?:Los|Las|El|La)\s+estudiante[s]?|^\s*\d+\s*[\.\)]\s+[A-Z������]|\Z)",
             flags=_re.M | _re.S,
         )
         per_ua: Dict[str, Dict[str, tuple]] = {}
@@ -337,10 +338,10 @@ def process_descriptor(descriptor_id: int):
 
     def _extract_situations(text: str, spans: Dict[str, tuple], evidence_pos: Dict[str, int]) -> Dict[str, str]:
         import re as _re
-        preferred_verb = {"1": "elaboran", "2": "diseñan", "3": "construyen", "4": "demuestran"}
+        preferred_verb = {"1": "elaboran", "2": "dise�an", "3": "construyen", "4": "demuestran"}
         start_rx = _re.compile(r"(?im)^\s*(?:Los|Las|El|La)\s+estudiante[s]?\b")
         crit_rx = _re.compile(r"(?m)^\s*\d{1,2}\.\d+\.\d+\s+")
-        evid_rx = _re.compile(r"(?m)^\s*\d+\s*[\.\)]\s+[A-ZÁÉÍÓÚÑ]")
+        evid_rx = _re.compile(r"(?m)^\s*\d+\s*[\.\)]\s+[A-Z������]")
 
         def window_for_ua(ua: str):
             starts = []
@@ -539,7 +540,7 @@ def process_descriptor(descriptor_id: int):
     def _distill_text_for_admin(t: Optional[str]) -> str:
         if not t:
             return ""
-        # Colapsa espacios y saltos de línea, sin recortar
+        # Colapsa espacios y saltos de l�nea, sin recortar
         return " ".join(str(t).split())
 
     d.text_cache = pdf_text or ""
@@ -600,7 +601,81 @@ def process_descriptor(descriptor_id: int):
     if use_light_ai:
         # Pre-armar subject y unidades desde el texto local
         data["subject"] = {"name": local_name, "code": local_code}
-        # Unidades se parsean mÃ¡s abajo con el parser local si no vienen de IA
+        # Persistencia temprana (antes de IA): crear/actualizar Subject y unidades locales basicas
+        try:
+            early_name = _sanitize_subject_name(_maybe_titlecase(_norm_ws(local_name)))
+            early_code = _norm_code(local_code)
+            if early_name and early_code:
+                early_area_name = subject_area_for_name(early_name) or area_by_code(early_code) or env.get("default_area")
+                if early_area_name not in AREA_ENUM:
+                    early_area_name = env.get("default_area")
+                early_semester_name = env.get("default_semester")
+                # Intentar extraer unidades basicas desde el PDF
+                early_units_map = {}
+                try:
+                    early_units_map = _build_units_from_pdf(pdf_text)
+                except Exception:
+                    early_units_map = {}
+                with transaction.atomic():
+                    area_obj, _ = Area.objects.get_or_create(name=early_area_name)
+                    semester_obj, _ = SemesterLevel.objects.get_or_create(name=early_semester_name)
+                    subject, _ = Subject.objects.update_or_create(
+                        code=early_code,
+                        section=str(env.get("default_section")),
+                        defaults={
+                            "name": early_name,
+                            "area": area_obj,
+                            "semester": semester_obj,
+                            "campus": env.get("default_campus"),
+                            "api_type": int(env.get("default_api_type")),
+                            "hours": int(env.get("default_hours")),
+                        },
+                    )
+                    if d.subject_id is None:
+                        existing = DescriptorFile.objects.filter(subject=subject).exclude(id=d.id).first()
+                        if existing is not None:
+                            meta_conflict = {**(d.meta or {}), "status": "conflict_existing_descriptor", "subject_id": subject.id}
+                            d.meta = meta_conflict
+                            d.processed_at = timezone.now()
+                            d.save(update_fields=["meta", "processed_at"])
+                            logger.info("Descriptor %s not linked early: subject %s already has a descriptor (kept current record)", d.id, subject.id)
+                            return None
+                        d.subject = subject
+                        d.save(update_fields=["subject"])
+                    # Guardar unidades locales si se encuentran
+                    try:
+                        for ua_str, fields in (early_units_map or {}).items():
+                            try:
+                                num = int(ua_str)
+                            except Exception:
+                                continue
+                            if not (1 <= num <= 4):
+                                continue
+                            unit, _ = SubjectUnit.objects.get_or_create(subject=subject, number=num)
+                            changed = False
+                            if fields.get("activities_description") and not (unit.activities_description and unit.activities_description.strip()):
+                                unit.activities_description = _norm_ws(fields.get("activities_description")) or unit.activities_description
+                                changed = True
+                            if fields.get("evaluation_evidence") and not (unit.evaluation_evidence and unit.evaluation_evidence.strip()):
+                                unit.evaluation_evidence = _norm_ws(fields.get("evaluation_evidence")) or unit.evaluation_evidence
+                                changed = True
+                            if fields.get("unit_hours") is not None and unit.unit_hours is None:
+                                try:
+                                    unit.unit_hours = int(fields.get("unit_hours") or 0)
+                                    changed = True
+                                except Exception:
+                                    pass
+                            if changed:
+                                unit.save()
+                    except Exception:
+                                    pass
+                    # Marcar meta de persistencia parcial
+                    d.meta = {**(d.meta or {}), "partial_persisted": True}
+                    d.save(update_fields=["meta"])
+        except Exception as e:
+            logger.error("Persistencia temprana fallida para descriptor %s: %s", d.id, e)
+
+        # Unidades se parsean más abajo con el parser local si no vienen de IA
         # Pedir a la IA local SOLO CBC/API2/API3/competencias tecnicas
         sections, usage = extractor.extract_sections_from_text(
             pdf_text or "",
@@ -609,6 +684,31 @@ def process_descriptor(descriptor_id: int):
             need_api3=True,
             need_competencies=True,
         )
+        # Reintento programado si hay rate limit preventivo o por 429
+        if isinstance(usage, dict) and usage.get("rate_limited"):
+            retry_in = int(usage.get("retry_in") or 60)
+            logger.warning(
+                "Descriptor %s rate-limited (%s). Reintentando en %ss.",
+                d.id,
+                usage.get("reason") or "unknown",
+                retry_in,
+            )
+            try:
+                # Reprograma la misma tarea y termina sin tocar el descriptor
+                process_descriptor.apply_async(args=[descriptor_id], countdown=retry_in)
+            except Exception as e:
+                logger.error("No se pudo reprogramar descriptor %s: %s", d.id, e)
+            return None
+        # Log de uso de tokens por llamada (visible en consola de Docker del worker)
+        if isinstance(usage, dict):
+            logger.info(
+                "AI usage tokens: prompt=%s completion=%s total=%s model=%s provider=%s",
+                usage.get("prompt_tokens"),
+                usage.get("completion_tokens"),
+                usage.get("total_tokens"),
+                usage.get("model"),
+                usage.get("provider"),
+            )
         if isinstance(sections, dict):
             if isinstance(sections.get("company_boundary_condition"), dict):
                 data["company_boundary_condition"] = sections["company_boundary_condition"]
@@ -622,7 +722,7 @@ def process_descriptor(descriptor_id: int):
     else:
         # No pedir name/code a la IA: si no se pudo resolver localmente, omitir descriptor
         meta_update["status"] = "skipped_missing_subject"
-        # Etiqueta de ruta para auditorÃ­a
+        # Etiqueta de ruta para auditoría
         meta_update.setdefault("ai", {})["path"] = "skip_local_missing_subject"
         d.meta = {**(d.meta or {}), **meta_update, "extract": {}, "extract_minimal": {}, "text_chars": len(pdf_text or "")}
         d.processed_at = timezone.now()
@@ -653,7 +753,7 @@ def process_descriptor(descriptor_id: int):
                 k: v for k, v in subj.items() if k in {"name", "code", "area", "hours"}
             }
 
-                # Competencias técnicas: aceptar varias claves y formatos        # Competencias técnicas: aceptar varias claves y formatos
+                # Competencias t�cnicas: aceptar varias claves y formatos        # Competencias t�cnicas: aceptar varias claves y formatos
         comp_items = None
         if isinstance(payload.get("technical_competencies"), list):
             comp_items = payload.get("technical_competencies")
@@ -709,7 +809,7 @@ def process_descriptor(descriptor_id: int):
                         hours_int = None
                     unit_obj: Dict[str, Any] = {"number": idx}
                     if name:
-                        # Decision: map name â†’ expected_learning (objetivo breve)
+                        # Decision: map name → expected_learning (objetivo breve)
                         unit_obj["expected_learning"] = name
                     if hours_int is not None:
                         unit_obj["unit_hours"] = hours_int
@@ -718,12 +818,12 @@ def process_descriptor(descriptor_id: int):
                         break
                 if items:
                     out["subject_units"] = items
-        # CompanyBoundaryCondition / API2 / API3 se mantendrán si la IA ya trae claves correctas
+        # CompanyBoundaryCondition / API2 / API3 se mantendr�n si la IA ya trae claves correctas
         for key in ("company_boundary_condition", "api_type_2_completion", "api_type_3_completion"):
             val = payload.get(key)
             if isinstance(val, dict):
                 out[key] = val
-                # Ajuste: coerción a texto para CBC y API2/API3\n        cbc = out.get("company_boundary_condition")\n        if isinstance(cbc, dict):\n            cbc["company_type_description"] = _coerce_to_text(cbc.get("company_type_description"))\n            cbc["company_requirements_for_level_2_3"] = _coerce_to_text(cbc.get("company_requirements_for_level_2_3"))\n            cbc["project_minimum_elements"] = _coerce_to_text(cbc.get("project_minimum_elements"))\n            out["company_boundary_condition"] = cbc\n        for blk in ("api_type_2_completion", "api_type_3_completion"):\n            dct = out.get(blk)\n            if isinstance(dct, dict):\n                for f in list(dct.keys()):\n                    dct[f] = _coerce_to_text(dct.get(f))\n                out[blk] = dct\n        return out\n\n    data = _normalize_ai_payload(data or {})
+                # Ajuste: coerci�n a texto para CBC y API2/API3\n        cbc = out.get("company_boundary_condition")\n        if isinstance(cbc, dict):\n            cbc["company_type_description"] = _coerce_to_text(cbc.get("company_type_description"))\n            cbc["company_requirements_for_level_2_3"] = _coerce_to_text(cbc.get("company_requirements_for_level_2_3"))\n            cbc["project_minimum_elements"] = _coerce_to_text(cbc.get("project_minimum_elements"))\n            out["company_boundary_condition"] = cbc\n        for blk in ("api_type_2_completion", "api_type_3_completion"):\n            dct = out.get(blk)\n            if isinstance(dct, dict):\n                for f in list(dct.keys()):\n                    dct[f] = _coerce_to_text(dct.get(f))\n                out[blk] = dct\n        return out\n\n    data = _normalize_ai_payload(data or {})
     # Pre-normalizar area a enum antes de validar
     try:
         subj_block = (data or {}).get("subject") or {}
@@ -789,7 +889,7 @@ def process_descriptor(descriptor_id: int):
         t = text
         results: List[Dict[str, Any]] = []
         # Buscar cabeceras tipo "Unidad 1: Titulo ..." o variantes "U1 - Titulo"
-        pattern = re.compile(r"(?:^|\n)\s*(?:Unidad|U)\s*(?P<num>[IVXLC0-9]{1,3})\s*[:\-â€“â€”]?\s*(?P<title>[^\n]*)", re.IGNORECASE)
+        pattern = re.compile(r"(?:^|\n)\s*(?:Unidad|U)\s*(?P<num>[IVXLC0-9]{1,3})\s*[:\-–—]?\s*(?P<title>[^\n]*)", re.IGNORECASE)
         indices = [(m.start(), m.end(), m.group('num'), (m.group('title') or '').strip()) for m in pattern.finditer(t)]
         # Crear bloques por rango entre cabeceras
         for i, (s, e, num_raw, title) in enumerate(indices):
@@ -866,7 +966,7 @@ def process_descriptor(descriptor_id: int):
                 if text_item:
                     groups.setdefault(maj, []).append(text_item)
                 i = j
-            # construir unidades 1..4 a partir de grupos (sin continuaciones multilÃ­nea)
+            # construir unidades 1..4 a partir de grupos (sin continuaciones multilínea)
             def _shorten(s: str, limit: int = 220) -> str:
                 if len(s) <= limit:
                     return s
@@ -874,7 +974,7 @@ def process_descriptor(descriptor_id: int):
                 dot = s.find('.')
                 if 60 <= dot <= limit:
                     return s[:dot+1].strip()
-                return (s[:limit].rstrip() + 'â€¦')
+                return (s[:limit].rstrip() + '…')
             for maj in sorted([k for k in groups.keys() if 1 <= k <= 4])[:4]:
                 items = groups.get(maj) or []
                 if not items:
@@ -959,9 +1059,9 @@ def process_descriptor(descriptor_id: int):
         stops = [
             "APRENDIZAJES ESPERADOS",
             "CRITERIOS DE EVALU",
-            "CONTENIDOS MÃNIMOS",
+            "CONTENIDOS MÍNIMOS",
             "CONTENIDOS MINIMOS",
-            "ACTIVIDADES MÃNIMAS",
+            "ACTIVIDADES MÍNIMAS",
             "ACTIVIDADES MINIMAS",
             "ESTRATEGIAS",
             "SISTEMA DE EVALU",
@@ -980,13 +1080,13 @@ def process_descriptor(descriptor_id: int):
         if mcrit:
             cut = min(cut, mcrit.start())
         s = s[:cut].strip()
-        # Si aÃºn es muy largo, corta a la primera oraciÃ³n razonable o a 220 chars
+        # Si aún es muy largo, corta a la primera oración razonable o a 220 chars
         if len(s) > 240:
             dot = s.find('.')
             if 40 <= dot <= 240:
                 s = s[:dot+1].strip()
             else:
-                s = (s[:240].rstrip() + 'â€¦')
+                s = (s[:240].rstrip() + '…')
         return s or None
 
     # No bloquear por fallo de schema: seguir usando el payload
@@ -1006,9 +1106,9 @@ def process_descriptor(descriptor_id: int):
             r"horas\s*totales\s*(del|de la)?\s*(curso|asignatura)?\s*[:\-]?\s*(?P<n>\d{1,3})",
             r"total\s*de\s*horas\s*[:\-]?\s*(?P<n>\d{1,3})",
             r"horas\s*de\s*la\s*asignatura\s*[:\-]?\s*(?P<n>\d{1,3})",
-            r"duraci[oÃ³]n\s*[:\-]?\s*(?P<n>\d{1,3})\s*(horas|hrs\.?|h\.)",
-            r"(?P<n>\d{1,3})\s*(horas|hrs\.?|h\.)(\s*(cronol[oÃ³]gicas|pedag[oÃ³]gicas))?",
-            r"horas\s*(cronol[oÃ³]gicas|pedag[oÃ³]gicas)\s*[:\-]?\s*(?P<n>\d{1,3})",
+            r"duraci[oó]n\s*[:\-]?\s*(?P<n>\d{1,3})\s*(horas|hrs\.?|h\.)",
+            r"(?P<n>\d{1,3})\s*(horas|hrs\.?|h\.)(\s*(cronol[oó]gicas|pedag[oó]gicas))?",
+            r"horas\s*(cronol[oó]gicas|pedag[oó]gicas)\s*[:\-]?\s*(?P<n>\d{1,3})",
             r"hrs\.?\s*[:\-]?\s*(?P<n>\d{1,3})",
         ]
         candidates: List[int] = []
@@ -1042,7 +1142,7 @@ def process_descriptor(descriptor_id: int):
     parsed_hours = _parse_hours_from_text(pdf_text)
     chosen_hours = ia_hours or sum_units or parsed_hours or int(env.get("default_hours"))
 
-    # Trace how code was resolved for debugging/auditorÃ­a
+    # Trace how code was resolved for debugging/auditoría
     code_trace: Dict[str, Any] = {
         "ia_code": subj_code,
         "near_name_code": None,
@@ -1052,7 +1152,7 @@ def process_descriptor(descriptor_id: int):
         "appeared_in_text": None,
     }
 
-    # Validar que el cÃ³digo aparezca en el texto; si no, reintentar heurÃ­sticas mÃ¡s cercanas al nombre
+    # Validar que el código aparezca en el texto; si no, reintentar heurísticas más cercanas al nombre
     def _code_in_text(code: Optional[str], raw: Optional[str]) -> bool:
         if not code or not raw:
             return False
@@ -1151,7 +1251,7 @@ def process_descriptor(descriptor_id: int):
             else:
                 # 4th fallback: match subject name from pool + code regex from full text cache
                 pool_name = _match_subject_name_local(d.text_cache or "")
-                # Intentar cÃ³digo cerca del nombre detectado; si falla, bÃºsqueda global
+                # Intentar código cerca del nombre detectado; si falla, búsqueda global
                 code_guess = extract_code_from_text_near_name(d.text_cache or "", pool_name) or extract_code_from_text(d.text_cache or "")
                 if not pool_name or not code_guess:
                     meta_update["status"] = "skipped_missing_subject"
@@ -1203,7 +1303,7 @@ def process_descriptor(descriptor_id: int):
         )
 
         if d.subject_id is None:
-            # Enforce unique descriptor per subject: si ya existe, no sobreescribir; dejar registro para revisiÃ³n
+            # Enforce unique descriptor per subject: si ya existe, no sobreescribir; dejar registro para revisión
             existing = DescriptorFile.objects.filter(subject=subject).exclude(id=d.id).first()
             if existing is not None:
                 meta_conflict = {**(d.meta or {}), "status": "conflict_existing_descriptor", "subject_id": subject.id}
@@ -1343,6 +1443,7 @@ def process_descriptor(descriptor_id: int):
     d.save(update_fields=["meta", "processed_at"])
 
     return d.id
+
 
 
 

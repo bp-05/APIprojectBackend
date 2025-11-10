@@ -54,7 +54,7 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-ollama}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-phi3:mini}
-    command: celery -A api_backend worker -l INFO -Q celery
+    command: celery -A api_backend worker -l INFO -Q celery -c 1
     volumes:
       - media_data:/app/media
     depends_on:
