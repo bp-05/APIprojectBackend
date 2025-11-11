@@ -36,11 +36,158 @@
       "password": "doc2"
     },
     {
+      "email": "doc3@example.com",
+      "nombre": "Elisa",
+      "apellido": "Arias",
+      "rol": "Docente",
+      "password": "doc3"
+    },
+    {
+      "email": "doc4@example.com",
+      "nombre": "Diego",
+      "apellido": "Cortes",
+      "rol": "Docente",
+      "password": "doc4"
+    },
+    {
+      "email": "doc5@example.com",
+      "nombre": "Esteban",
+      "apellido": "Parra",
+      "rol": "Docente",
+      "password": "doc5"
+    },
+    {
       "email": "coord1@example.com",
       "nombre": "Marcos",
       "apellido": "Lopez",
       "rol": "Coordinador",
       "password": "coord1"
+    }
+  ],
+  
+  "companies": [
+    {
+      "name": "TechSolutions Chile",
+      "address": "Av. Providencia 1500, Santiago",
+      "management_address": "Piso 5, Torre A",
+      "spys_responsible_name": "Carlos González",
+      "email": "contacto@techsolutions.cl",
+      "phone": "+56912345678",
+      "employees_count": 150,
+      "sector": "Tecnología e Informática"
+    },
+    {
+      "name": "Constructora Moderna S.A.",
+      "address": "Camino a Melipilla Km 25, Santiago",
+      "management_address": "Oficina Principal",
+      "spys_responsible_name": "Roberto Martínez",
+      "email": "info@constructora-moderna.cl",
+      "phone": "+56923456789",
+      "employees_count": 320,
+      "sector": "Construcción"
+    },
+    {
+      "name": "AgriGreen Limitada",
+      "address": "Ruta 5 Sur Km 100, Región del Maule",
+      "management_address": "Casa Central",
+      "spys_responsible_name": "Alejandra Rodríguez",
+      "email": "administracion@agrigreen.cl",
+      "phone": "+56934567890",
+      "employees_count": 85,
+      "sector": "Agricultura"
+    },
+    {
+      "name": "Logística Express S.A.",
+      "address": "Polígono Industrial Sur, Santiago",
+      "management_address": "Centro de Operaciones",
+      "spys_responsible_name": "Javier López",
+      "email": "gerencia@logistica-express.cl",
+      "phone": "+56945678901",
+      "employees_count": 250,
+      "sector": "Logística y Transporte"
+    },
+    {
+      "name": "Retail Plus Chile",
+      "address": "Avenida Apoquindo 6000, Las Condes",
+      "management_address": "Piso 12, Edificio Corporativo",
+      "spys_responsible_name": "Patricia Núñez",
+      "email": "contacto@retailplus.cl",
+      "phone": "+56956789012",
+      "employees_count": 500,
+      "sector": "Retail y Comercio"
+    }
+  ],
+
+  "subjects": [
+    {
+      "code": "INF-101",
+      "section": "1",
+      "name": "Fundamentos de Programación",
+      "campus": "chillan",
+      "shift": "diurna",
+      "phase": "inicio",
+      "hours": 60,
+      "api_type": 2,
+      "teacher_email": "doc1@example.com",
+      "area": "Informática",
+      "career": "Ingeniería en Informática",
+      "semester": "1"
+    },
+    {
+      "code": "INF-205V",
+      "section": "1",
+      "name": "Desarrollo Web Avanzado",
+      "campus": "chillan",
+      "shift": "vespertina",
+      "phase": "inicio",
+      "hours": 80,
+      "api_type": 2,
+      "teacher_email": "doc2@example.com",
+      "area": "Informática",
+      "career": "Ingeniería en Informática",
+      "semester": "2"
+    },
+    {
+      "code": "CONST-103",
+      "section": "1",
+      "name": "Estructuras y Cálculo",
+      "campus": "chillan",
+      "shift": "diurna",
+      "phase": "inicio",
+      "hours": 72,
+      "api_type": 1,
+      "teacher_email": "doc3@example.com",
+      "area": "Construcción",
+      "career": "Técnico en Construcción",
+      "semester": "3"
+    },
+    {
+      "code": "ADM-204V",
+      "section": "2",
+      "name": "Gestión de Proyectos",
+      "campus": "chillan",
+      "shift": "vespertina",
+      "phase": "inicio",
+      "hours": 64,
+      "api_type": 3,
+      "teacher_email": "doc4@example.com",
+      "area": "Administración",
+      "career": "Técnico en Administración",
+      "semester": "4"
+    },
+    {
+      "code": "INF-306",
+      "section": "1",
+      "name": "Inteligencia Artificial y Machine Learning",
+      "campus": "chillan",
+      "shift": "diurna",
+      "phase": "inicio",
+      "hours": 96,
+      "api_type": 3,
+      "teacher_email": "doc5@example.com",
+      "area": "Informática",
+      "career": "Ingeniería en Informática",
+      "semester": "6"
     }
   ]
 }

@@ -72,23 +72,32 @@ def _load_populate_json():
         logger.error("No se pudo leer scripts/populate.json: %s", e)
         return
 
+    def _coerce_int(val, default=0):
+        try:
+            if val is None or val == "":
+                return default
+            return int(val)
+        except Exception:
+            return default
+
+    # --- Users ---
     try:
         User = apps.get_model('users', 'User')
     except (LookupError, ImproperlyConfigured) as e:
         logger.error("Modelo User no disponible: %s", e)
-        return
+        User = None
 
     users = payload.get('users') or []
-    if users:
+    if users and User is not None:
         try:
             with transaction.atomic():
                 for u in users:
                     email = (u.get('email') or '').strip()
                     if not email:
                         continue
-                    first_name = (u.get('nombre') or '').strip()
-                    last_name = (u.get('apellido') or '').strip()
-                    role_label = u.get('rol')
+                    first_name = (u.get('nombre') or u.get('first_name') or '').strip()
+                    last_name = (u.get('apellido') or u.get('last_name') or '').strip()
+                    role_label = u.get('rol') or u.get('role')
                     role_code = _role_code_for_label(role_label) or User.Role.DOC
                     password = u.get('password')
 
@@ -108,7 +117,7 @@ def _load_populate_json():
                     if obj.last_name != last_name:
                         obj.last_name = last_name
                         updated = True
-                    if obj.role != role_code:
+                    if getattr(obj, 'role', None) != role_code:
                         obj.role = role_code
                         updated = True
                     # Only set password on create to avoid overwriting local changes
@@ -123,6 +132,219 @@ def _load_populate_json():
             logger.warning("Populate omitido (DB no lista): %s", db_err)
         except Exception as e:
             logger.error("Error durante populate de usuarios: %s", e)
+
+    # --- Companies ---
+    companies_list = payload.get('companies') or payload.get('companys') or []
+    if companies_list:
+        try:
+            Company = apps.get_model('companies', 'Company')
+        except (LookupError, ImproperlyConfigured) as e:
+            logger.error("Modelo Company no disponible: %s", e)
+            Company = None
+        if Company is not None:
+            try:
+                with transaction.atomic():
+                    created_or_updated = 0
+                    for c in companies_list:
+                        # Admitir claves en español o inglés
+                        name = (c.get('name') or c.get('nombre') or '').strip()
+                        if not name:
+                            continue
+                        address = (c.get('address') or c.get('direccion') or '').strip()
+                        management_address = (c.get('management_address') or c.get('direccion_administracion') or '').strip()
+                        spys_responsible_name = (c.get('spys_responsible_name') or c.get('responsable_spys') or '').strip()
+                        email = (c.get('email') or c.get('correo') or '').strip()
+                        phone = (c.get('phone') or c.get('telefono') or '').strip()
+                        employees_count = _coerce_int(c.get('employees_count') or c.get('cantidad_empleados') or c.get('empleados'))
+                        sector = (c.get('sector') or '').strip()
+
+                        obj, created = Company.objects.get_or_create(
+                            name=name,
+                            defaults={
+                                'address': address,
+                                'management_address': management_address,
+                                'spys_responsible_name': spys_responsible_name,
+                                'email': email,
+                                'phone': phone,
+                                'employees_count': employees_count,
+                                'sector': sector,
+                            },
+                        )
+                        updated = False
+                        if obj.address != address:
+                            obj.address = address
+                            updated = True
+                        if obj.management_address != management_address:
+                            obj.management_address = management_address
+                            updated = True
+                        if obj.spys_responsible_name != spys_responsible_name:
+                            obj.spys_responsible_name = spys_responsible_name
+                            updated = True
+                        if obj.email != email:
+                            obj.email = email
+                            updated = True
+                        if obj.phone != phone:
+                            obj.phone = phone
+                            updated = True
+                        if obj.employees_count != employees_count:
+                            obj.employees_count = employees_count
+                            updated = True
+                        if obj.sector != sector:
+                            obj.sector = sector
+                            updated = True
+                        if updated:
+                            obj.save()
+                        if created or updated:
+                            created_or_updated += 1
+                    logger.info("Populate: companies procesadas: %d", created_or_updated)
+            except (OperationalError, ProgrammingError) as db_err:
+                logger.warning("Populate companies omitido (DB no lista): %s", db_err)
+            except Exception as e:
+                logger.error("Error durante populate de companies: %s", e)
+
+    # --- Subjects ---
+    subjects_list = payload.get('subjects') or []
+    if subjects_list:
+        try:
+            Subject = apps.get_model('subjects', 'Subject')
+            Area = apps.get_model('subjects', 'Area')
+            Career = apps.get_model('subjects', 'Career')
+            SemesterLevel = apps.get_model('subjects', 'SemesterLevel')
+        except (LookupError, ImproperlyConfigured) as e:
+            logger.error("Modelos de subjects no disponibles: %s", e)
+            Subject = Area = Career = SemesterLevel = None
+
+        # Helpers locales para resolver FKs
+        def _find_area(name: str):
+            if not name:
+                return None
+            n = _norm_str(name)
+            for a in Area.objects.all():
+                if _norm_str(a.name) == n:
+                    return a
+            # fallback: startswith or contains
+            for a in Area.objects.all():
+                an = _norm_str(a.name)
+                if n.startswith(an) or an.startswith(n) or n in an or an in n:
+                    return a
+            # create if not found
+            return Area.objects.create(name=name)
+
+        ORDINALS = {
+            '1': 'Primero', '2': 'Segundo', '3': 'Tercero', '4': 'Cuarto', '5': 'Quinto',
+            '6': 'Sexto', '7': 'Septimo', '8': 'Octavo', '9': 'Noveno', '10': 'Decimo',
+        }
+
+        def _find_semester(val: str):
+            if val is None:
+                return None
+            s = str(val).strip()
+            # Map numeric string to ordinal name
+            if s in ORDINALS:
+                target = ORDINALS[s]
+                obj = SemesterLevel.objects.filter(name__iexact=target).first()
+                if obj:
+                    return obj
+            # Try by id
+            try:
+                iid = int(s)
+                obj = SemesterLevel.objects.filter(id=iid).first()
+                if obj:
+                    return obj
+            except Exception:
+                pass
+            # Try by normalized name
+            ns = _norm_str(s)
+            for sem in SemesterLevel.objects.all():
+                if _norm_str(sem.name) == ns:
+                    return sem
+            return None
+
+        if Subject is not None:
+            try:
+                with transaction.atomic():
+                    upserted = 0
+                    for s in subjects_list:
+                        code = (s.get('code') or '').strip()
+                        section = str(s.get('section') or '1').strip()
+                        name = (s.get('name') or '').strip()
+                        if not code or not name:
+                            continue
+                        campus = (s.get('campus') or 'chillan').strip()
+                        phase = (s.get('phase') or 'inicio').strip().lower()
+                        hours = _coerce_int(s.get('hours'), 0)
+                        api_type = _coerce_int(s.get('api_type'), 1)
+                        teacher_email = (s.get('teacher_email') or '').strip()
+                        area_name = (s.get('area') or '').strip()
+                        career_name = (s.get('career') or '').strip()
+                        semester_val = s.get('semester')
+
+                        area_obj = _find_area(area_name) if area_name else None
+                        sem_obj = _find_semester(semester_val)
+                        if not area_obj or not sem_obj:
+                            logger.warning("Subject omitido por FK faltante: code=%s section=%s area=%s semester=%s", code, section, area_name, semester_val)
+                            continue
+
+                        career_obj = None
+                        if career_name:
+                            career_obj = Career.objects.filter(name__iexact=career_name).first()
+                            if not career_obj:
+                                # crear si no existe
+                                career_obj, _ = Career.objects.get_or_create(name=career_name, defaults={"area": area_obj})
+                            elif getattr(career_obj, 'area_id', None) != area_obj.id:
+                                # corregir area si difiere
+                                career_obj.area = area_obj
+                                career_obj.save(update_fields=["area"])
+
+                        teacher_obj = None
+                        if teacher_email and User is not None:
+                            teacher_obj = User.objects.filter(email__iexact=teacher_email).first()
+                            if not teacher_obj:
+                                # crear docente básico si no existe
+                                teacher_obj = User.objects.create_user(email=teacher_email, password=None, role=getattr(User.Role, 'DOC', 'DOC'))
+
+                        obj, created = Subject.objects.get_or_create(
+                            code=code,
+                            section=section,
+                            defaults={
+                                'name': name,
+                                'campus': campus,
+                                'phase': phase,
+                                'hours': hours,
+                                'api_type': api_type,
+                                'teacher': teacher_obj,
+                                'area': area_obj,
+                                'career': career_obj,
+                                'semester': sem_obj,
+                            },
+                        )
+                        updated = False
+                        for field, value in (
+                            ("name", name), ("campus", campus), ("phase", phase), ("hours", hours), ("api_type", api_type),
+                        ):
+                            if getattr(obj, field) != value:
+                                setattr(obj, field, value)
+                                updated = True
+                        if (teacher_obj is not None) and (obj.teacher_id != getattr(teacher_obj, 'id', None)):
+                            obj.teacher = teacher_obj
+                            updated = True
+                        if obj.area_id != area_obj.id:
+                            obj.area = area_obj
+                            updated = True
+                        if (career_obj is not None) and (obj.career_id != getattr(career_obj, 'id', None)):
+                            obj.career = career_obj
+                            updated = True
+                        if obj.semester_id != sem_obj.id:
+                            obj.semester = sem_obj
+                            updated = True
+                        if created or updated:
+                            obj.save()
+                            upserted += 1
+                    logger.info("Populate: subjects procesados: %d", upserted)
+            except (OperationalError, ProgrammingError) as db_err:
+                logger.warning("Populate subjects omitido (DB no lista): %s", db_err)
+            except Exception as e:
+                logger.error("Error durante populate de subjects: %s", e)
 
 
 @receiver(post_migrate)
