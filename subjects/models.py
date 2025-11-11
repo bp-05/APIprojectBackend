@@ -70,6 +70,15 @@ class Subject(models.Model):
         choices=(("diurna", "diurna"), ("vespertina", "vespertina")),
         default="diurna",
     )
+    # Fase/estado manual de avance
+    PHASE_CHOICES = (
+        ("inicio", "Inicio"),
+        ("formulacion", "Formulación de requerimientos"),
+        ("gestion", "Gestión de requerimientos"),
+        ("validacion", "Validación de requerimientos"),
+        ("completado", "Completado"),
+    )
+    phase = models.CharField(max_length=20, choices=PHASE_CHOICES, default="inicio")
     hours = models.PositiveIntegerField(default=0)
     api_type = models.PositiveSmallIntegerField(
         default=1,
@@ -96,6 +105,29 @@ class Subject(models.Model):
     def __str__(self):
         return f"{self.code} (Sec. {self.section}) - {self.name}"
 
+    def save(self, *args, **kwargs):
+        # Infer shift from subject code: if code contains 'V' (case-insensitive), it's vespertina; otherwise diurna.
+        if self.code:
+            self.shift = "vespertina" if "V" in self.code.upper() else "diurna"
+        super().save(*args, **kwargs)
+
+
+class SubjectPhaseSchedule(models.Model):
+    PHASE_CHOICES = Subject.PHASE_CHOICES
+    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='phase_schedules')
+    phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
+    days_allocated = models.PositiveIntegerField(default=0)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("subject", "phase")
+        constraints = [
+            models.UniqueConstraint(fields=("subject", "phase"), name="uniq_subject_phase_schedule"),
+        ]
+
+    def __str__(self):
+        return f"{self.subject.code} - {self.phase} ({self.days_allocated}d)"
 
 class SubjectUnit(models.Model):  #ficha proyecto api unidades
     number = models.IntegerField()

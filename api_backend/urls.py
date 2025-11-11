@@ -37,6 +37,7 @@ from subjects.views import (
     Api3AlternanceViewSet,
     ApiType2CompletionViewSet,
     ApiType3CompletionViewSet,
+    SubjectPhaseScheduleViewSet,
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
@@ -56,6 +57,7 @@ router.register(r'careers', CareerViewSet, basename='career')
 router.register(r'subject-semesters', SubjectSemesterViewSet, basename='subject-semester')
 router.register(r'subject-units', SubjectUnitViewSet, basename='subject-unit')
 router.register(r'subject-competencies', SubjectTechnicalCompetencyViewSet, basename='subject-competency')
+router.register(r'subject-phase-schedules', SubjectPhaseScheduleViewSet, basename='subject-phase-schedule')
 router.register(r'boundary-conditions', CompanyBoundaryConditionViewSet, basename='boundary-condition')
 router.register(r'company-requirements', CompanyRequirementViewSet, basename='company-requirement')
 router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')

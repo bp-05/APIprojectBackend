@@ -12,6 +12,7 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
+    SubjectPhaseSchedule,
 )
 """Serializers for subjects app.
 
@@ -27,7 +28,7 @@ class SubjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subject
-        fields = ['id', 'code', 'section', 'name', 'campus', 'shift', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'career', 'career_name', 'semester', 'semester_name']
+        fields = ['id', 'code', 'section', 'name', 'campus', 'shift', 'phase', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'career', 'career_name', 'semester', 'semester_name']
         extra_kwargs = {
             'teacher': {'required': False, 'allow_null': True},
         }
@@ -182,3 +183,18 @@ class ApiType3CompletionSerializer(serializers.ModelSerializer):
 
 
 ## ProblemStatement serializers moved to companies.serializers
+
+
+class SubjectPhaseScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubjectPhaseSchedule
+        fields = [
+            'id', 'subject', 'phase', 'days_allocated', 'start_date', 'end_date'
+        ]
+
+    def validate(self, attrs):
+        start = attrs.get('start_date')
+        end = attrs.get('end_date')
+        if start and end and end < start:
+            raise serializers.ValidationError({'end_date': 'end_date no puede ser anterior a start_date'})
+        return attrs

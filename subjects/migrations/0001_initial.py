@@ -161,6 +161,13 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=200)),
                 ('shift', models.CharField(choices=(('diurna', 'diurna'), ('vespertina', 'vespertina')), default='diurna', max_length=10)),
                 ('campus', models.CharField(default='chillan', max_length=50)),
+                ('phase', models.CharField(default='inicio', max_length=20, choices=[
+                    ('inicio', 'Inicio'),
+                    ('formulacion', 'Formulación de requerimientos'),
+                    ('gestion', 'Gestión de requerimientos'),
+                    ('validacion', 'Validación de requerimientos'),
+                    ('completado', 'Completado'),
+                ])),
                 ('hours', models.PositiveIntegerField(default=0)),
                 ('api_type', models.PositiveSmallIntegerField(choices=((1, 'Type 1'), (2, 'Type 2'), (3, 'Type 3')), default=1)),
                 ('area', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.area')),
@@ -168,6 +175,22 @@ class Migration(migrations.Migration):
                 ('semester', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.semesterlevel')),
                 ('teacher', models.ForeignKey(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to=settings.AUTH_USER_MODEL)),
             ],
+        ),
+        migrations.CreateModel(
+            name='SubjectPhaseSchedule',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('phase', models.CharField(choices=[('inicio', 'Inicio'), ('formulacion', 'Formulación de requerimientos'), ('gestion', 'Gestión de requerimientos'), ('validacion', 'Validación de requerimientos'), ('completado', 'Completado')], max_length=20)),
+                ('days_allocated', models.PositiveIntegerField(default=0)),
+                ('start_date', models.DateField(blank=True, null=True)),
+                ('end_date', models.DateField(blank=True, null=True)),
+                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='phase_schedules', to='subjects.subject')),
+            ],
+            options={'ordering': ('subject', 'phase')},
+        ),
+        migrations.AddConstraint(
+            model_name='subjectphaseschedule',
+            constraint=models.UniqueConstraint(fields=('subject', 'phase'), name='uniq_subject_phase_schedule'),
         ),
         migrations.AddConstraint(
             model_name='subject',

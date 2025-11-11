@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "email": "vcm1@example.com",
+      "nombre": "Juan",
+      "apellido": "Perez",
+      "rol": "Vinculacion con el medio",
+      "password": "vcm1"
+    },
+    {
+      "email": "dc1@example.com",
+      "nombre": "Mario",
+      "apellido": "Salas",
+      "rol": "Director de carrera",
+      "password": "dc1"
+    },
+    {
+      "email": "da1@example.com",
+      "nombre": "Ivan",
+      "apellido": "Lagos",
+      "rol": "Departamento Academico",
+      "password": "da1"
+    },
+    {
+      "email": "doc1@example.com",
+      "nombre": "Gaston",
+      "apellido": "Muñoz",
+      "rol": "Docente",
+      "password": "doc1"
+    },
+    {
+      "email": "doc2@example.com",
+      "nombre": "Maria",
+      "apellido": "Contreras",
+      "rol": "Docente",
+      "password": "doc2"
+    },
+    {
+      "email": "coord1@example.com",
+      "nombre": "Marcos",
+      "apellido": "Lopez",
+      "rol": "Coordinador",
+      "password": "coord1"
+    }
+  ]
+}

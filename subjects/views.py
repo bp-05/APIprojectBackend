@@ -16,6 +16,7 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
+    SubjectPhaseSchedule,
 )
 ## ProblemStatement model imported by companies app where its views live
 from .serializers import (
@@ -30,6 +31,7 @@ from .serializers import (
     Api3AlternanceSerializer,
     ApiType2CompletionSerializer,
     ApiType3CompletionSerializer,
+    SubjectPhaseScheduleSerializer,
 )
 from .permissions import IsSubjectTeacherOrAdmin
 
@@ -222,4 +224,22 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
 
 
 ## ProblemStatementViewSet movido a companies.views
+
+
+class SubjectPhaseScheduleViewSet(viewsets.ModelViewSet):
+    queryset = SubjectPhaseSchedule.objects.all().select_related('subject')
+    serializer_class = SubjectPhaseScheduleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['subject', 'phase']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if (
+            getattr(user, 'is_staff', False)
+            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
+            or user.groups.filter(name__in=['vcm']).exists()
+        ):
+            return qs
+        return qs.filter(subject__teacher=user)
 

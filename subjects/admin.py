@@ -12,13 +12,14 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
+    SubjectPhaseSchedule,
 )
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "section", "name", "campus", "hours", "api_type", "teacher", "area", "career", "semester")
-    list_filter = ( "api_type", "area", "career", "semester", "section")
+    list_display = ("id", "code", "section", "name", "campus", "shift", "phase", "hours", "api_type", "teacher", "area", "career", "semester")
+    list_filter = ( "api_type", "area", "career", "semester", "section", "shift", "phase")
     search_fields = ("code", "section", "name", "teacher__email", "teacher__first_name", "teacher__last_name")
     autocomplete_fields = ("teacher", "area", "career", "semester")
     ordering = ("code", "section")
@@ -105,6 +106,14 @@ class ApiType3CompletionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("subject",)
     ordering = ("subject",)
 
+
+@admin.register(SubjectPhaseSchedule)
+class SubjectPhaseScheduleAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "phase", "days_allocated", "start_date", "end_date")
+    list_filter = ("phase",)
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject", "phase")
 
 ## CompanyEngagementScope admin movido a companies.admin
 
