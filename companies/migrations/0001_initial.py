@@ -20,9 +20,7 @@ class Migration(migrations.Migration):
                 ('phone', models.CharField(max_length=50)),
                 ('employees_count', models.PositiveIntegerField(default=0)),
                 ('sector', models.CharField(max_length=100)),
-                ('api_type', models.PositiveSmallIntegerField(choices=((1, 'Type 1'), (2, 'Type 2'), (3, 'Type 3')), default=1)),
             ],
             options={'ordering': ('name',)},
         ),
     ]
-

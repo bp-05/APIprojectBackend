@@ -4,8 +4,8 @@ from .models import Company, ProblemStatement, CounterpartContact, CompanyEngage
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "sector", "employees_count", "api_type", "email", "phone")
-    list_filter = ("api_type", "sector")
+    list_display = ("id", "name", "sector", "employees_count", "email", "phone")
+    list_filter = ("sector",)
     search_fields = ("name", "email", "phone")
     ordering = ("name",)
 

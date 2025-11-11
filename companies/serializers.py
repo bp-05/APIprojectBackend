@@ -17,7 +17,6 @@ class CompanySerializer(serializers.ModelSerializer):
             'phone',
             'employees_count',
             'sector',
-            'api_type',
         ]
 
 
