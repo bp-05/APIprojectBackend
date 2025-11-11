@@ -47,7 +47,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if (
             getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
+            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD', 'DC']
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
