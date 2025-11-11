@@ -346,6 +346,65 @@ def _load_populate_json():
             except Exception as e:
                 logger.error("Error durante populate de subjects: %s", e)
 
+    # --- Problem Statements ---
+    ps_list = payload.get('problem_statements') or []
+    if ps_list:
+        try:
+            ProblemStatement = apps.get_model('companies', 'ProblemStatement')
+            Company = apps.get_model('companies', 'Company')
+            Subject = apps.get_model('subjects', 'Subject')
+        except (LookupError, ImproperlyConfigured) as e:
+            logger.error("Modelos de companies/subjects no disponibles para problem_statements: %s", e)
+            ProblemStatement = Company = Subject = None
+        if ProblemStatement is not None and Company is not None and Subject is not None:
+            try:
+                with transaction.atomic():
+                    upserted = 0
+                    for it in ps_list:
+                        subj_code = (it.get('subject_code') or '').strip()
+                        subj_section = str(it.get('subject_section') or '1').strip()
+                        company_name = (it.get('company') or '').strip()
+                        if not subj_code or not company_name:
+                            continue
+                        subject = Subject.objects.filter(code=subj_code, section=subj_section).first()
+                        if subject is None:
+                            # Si no viene section, intentar por code único
+                            matches = list(Subject.objects.filter(code=subj_code)[:2])
+                            if len(matches) == 1:
+                                subject = matches[0]
+                        if subject is None:
+                            logger.warning("ProblemStatement omitido: no se encontró Subject code=%s section=%s", subj_code, subj_section)
+                            continue
+                        company = Company.objects.filter(name=company_name).first()
+                        if company is None:
+                            logger.warning("ProblemStatement omitido: no se encontró Company name=%s", company_name)
+                            continue
+                        defaults = {
+                            'problem_to_address': (it.get('problem_to_address') or '').strip(),
+                            'why_important': (it.get('why_important') or '').strip(),
+                            'stakeholders': (it.get('stakeholders') or '').strip(),
+                            'related_area': (it.get('related_area') or '').strip(),
+                            'benefits_short_medium_long_term': (it.get('benefits_short_medium_long_term') or '').strip(),
+                            'problem_definition': (it.get('problem_definition') or '').strip(),
+                        }
+                        obj, created = ProblemStatement.objects.get_or_create(
+                            subject=subject, company=company, defaults=defaults
+                        )
+                        updated = False
+                        for k, v in defaults.items():
+                            if getattr(obj, k) != v:
+                                setattr(obj, k, v)
+                                updated = True
+                        if updated:
+                            obj.save()
+                        if created or updated:
+                            upserted += 1
+                    logger.info("Populate: problem_statements procesados: %d", upserted)
+            except (OperationalError, ProgrammingError) as db_err:
+                logger.warning("Populate problem_statements omitido (DB no lista): %s", db_err)
+            except Exception as e:
+                logger.error("Error durante populate de problem_statements: %s", e)
+
 
 @receiver(post_migrate)
 def populate_after_migrate(sender, **kwargs):

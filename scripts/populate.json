@@ -189,5 +189,57 @@
       "career": "Ingeniería en Informática",
       "semester": "6"
     }
+  ],
+  "problem_statements": [
+    {
+      "problem_to_address": "Sistema de gestión de proyectos ineficiente y desactualizado",
+      "why_important": "La empresa requiere mejorar la coordinación entre equipos y reducir tiempos de entrega",
+      "stakeholders": "Jefes de proyecto, desarrolladores, clientes",
+      "related_area": "Tecnología e Informática",
+      "benefits_short_medium_long_term": "Corto: mejora comunicación. Mediano: reduce errores. Largo: aumenta productividad.",
+      "problem_definition": "Necesidad de desarrollar una plataforma web moderna para gestión colaborativa de proyectos",
+      "subject_code": "INF-205V",
+      "company": "TechSolutions Chile"
+    },
+    {
+      "problem_to_address": "Falta de automatización en procesos de construcción y seguimiento de obras",
+      "why_important": "Reduce costos, mejora seguridad y permite mejor control de recursos",
+      "stakeholders": "Maestros de obra, supervisores, gerentes de proyecto",
+      "related_area": "Construcción",
+      "benefits_short_medium_long_term": "Corto: mayor visibilidad. Mediano: menos accidentes. Largo: mejor rentabilidad.",
+      "problem_definition": "Necesidad de aplicación móvil para registro y monitoreo de obras en tiempo real",
+      "subject_code": "CONST-103",
+      "company": "Constructora Moderna S.A."
+    },
+    {
+      "problem_to_address": "Baja trazabilidad en procesos agrícolas y gestión de inventario",
+      "why_important": "Mejora control de calidad, reduce desperdicio y facilita cumplimiento normativo",
+      "stakeholders": "Agricultores, gerentes de operaciones, clientes compradores",
+      "related_area": "Agricultura",
+      "benefits_short_medium_long_term": "Corto: mejor registro. Mediano: menos pérdidas. Largo: certificación internacional.",
+      "problem_definition": "Implementar sistema de trazabilidad blockchain para productos agrícolas",
+      "subject_code": "INF-101",
+      "company": "AgriGreen Limitada"
+    },
+    {
+      "problem_to_address": "Ineficiencia en gestión de rutas de distribución y logística",
+      "why_important": "Reduce combustible, mejora tiempos de entrega y satisfacción del cliente",
+      "stakeholders": "Conductores, despachadores, clientes finales",
+      "related_area": "Logística y Transporte",
+      "benefits_short_medium_long_term": "Corto: optimiza rutas. Mediano: reduce costos. Largo: sosteniblidad ambiental.",
+      "problem_definition": "Desarrollo de plataforma SaaS con IA para optimización de rutas en tiempo real",
+      "subject_code": "INF-306",
+      "company": "Logística Express S.A."
+    },
+    {
+      "problem_to_address": "Falta de sistema integrado para gestión de inventario y punto de venta",
+      "why_important": "Reduce hurtos, mejora inventario y proporciona análisis de ventas en tiempo real",
+      "stakeholders": "Gerentes de tienda, vendedores, clientes, proveedores",
+      "related_area": "Retail y Comercio",
+      "benefits_short_medium_long_term": "Corto: mejor control. Mediano: aumenta ventas. Largo: expansión de sucursales.",
+      "problem_definition": "Crear solución ERP integrada con análisis de datos para cadena de retail",
+      "subject_code": "ADM-204V",
+      "company": "Retail Plus Chile"
+    }
   ]
 }
