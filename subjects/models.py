@@ -1,19 +1,24 @@
 from django.db import models
 from django.conf import settings
 
-class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/instituciones
-    INTERACTION_CHOICES = (
-        ("virtual", "Virtual"),
-        ("onsite_company", "On-site at company"),
-        ("onsite_inacap", "On-site at INACAP"),
-    )
+class InteractionType(models.Model):
+    code = models.CharField(max_length=32, unique=True)
+    label = models.CharField(max_length=64)
 
+    class Meta:
+        ordering = ("code",)
+
+    def __str__(self):
+        return self.label
+
+
+class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/instituciones
     sector = models.CharField(max_length=100)
     worked_before = models.BooleanField(default=False)
     interest_collaborate = models.BooleanField(default=False)
     can_develop_activities = models.BooleanField(default=False)
     willing_design_project = models.BooleanField(default=False)
-    interaction_type = models.CharField(max_length=20, choices=INTERACTION_CHOICES, default="virtual")
+    interaction_types = models.ManyToManyField('subjects.InteractionType', related_name='company_requirements', blank=True)
     has_guide = models.BooleanField(default=False)
     can_receive_alternance = models.BooleanField(default=False)
     alternance_students_quota = models.PositiveIntegerField(default=0)

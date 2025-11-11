@@ -76,8 +76,13 @@ class CompanyBoundaryConditionAdmin(admin.ModelAdmin):
 
 @admin.register(CompanyRequirement)
 class CompanyRequirementAdmin(admin.ModelAdmin):
-    list_display = ("id", "subject", "company", "sector", "interaction_type", "worked_before", "can_receive_alternance", "alternance_students_quota")
-    list_filter = ("interaction_type", "worked_before", "can_receive_alternance")
+    def interaction_types_list(self, obj):
+        return ", ".join(obj.interaction_types.values_list('code', flat=True))
+
+    interaction_types_list.short_description = "interaction_type"
+
+    list_display = ("id", "subject", "company", "sector", "interaction_types_list", "worked_before", "can_receive_alternance", "alternance_students_quota")
+    list_filter = ("interaction_types", "worked_before", "can_receive_alternance")
     search_fields = ("subject__code", "subject__name", "company__name")
     autocomplete_fields = ("subject", "company")
     ordering = ("subject",)

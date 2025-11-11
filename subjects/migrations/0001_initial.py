@@ -117,6 +117,17 @@ def seed_careers(apps, schema_editor):
             Career.objects.get_or_create(name=cname, area=area)
 
 
+def seed_interaction_types(apps, schema_editor):
+    InteractionType = apps.get_model('subjects', 'InteractionType')
+    data = [
+        ('virtual', 'Virtual'),
+        ('onsite_inacap', 'Presencial INACAP'),
+        ('onsite_company', 'Presencial empresa'),
+    ]
+    for code, label in data:
+        InteractionType.objects.get_or_create(code=code, defaults={'label': label})
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -256,6 +267,15 @@ class Migration(migrations.Migration):
             options={'ordering': ('subject',)},
         ),
         migrations.CreateModel(
+            name='InteractionType',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('code', models.CharField(max_length=32, unique=True)),
+                ('label', models.CharField(max_length=64)),
+            ],
+            options={'ordering': ('code',)},
+        ),
+        migrations.CreateModel(
             name='CompanyRequirement',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -264,7 +284,6 @@ class Migration(migrations.Migration):
                 ('interest_collaborate', models.BooleanField(default=False)),
                 ('can_develop_activities', models.BooleanField(default=False)),
                 ('willing_design_project', models.BooleanField(default=False)),
-                ('interaction_type', models.CharField(choices=(('virtual', 'Virtual'), ('onsite_company', 'On-site at company'), ('onsite_inacap', 'On-site at INACAP')), default='virtual', max_length=20)),
                 ('has_guide', models.BooleanField(default=False)),
                 ('can_receive_alternance', models.BooleanField(default=False)),
                 ('alternance_students_quota', models.PositiveIntegerField(default=0)),
@@ -276,6 +295,11 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='companyrequirement',
             constraint=models.UniqueConstraint(fields=('subject', 'company'), name='uniq_requirement_subject_company'),
+        ),
+        migrations.AddField(
+            model_name='companyrequirement',
+            name='interaction_types',
+            field=models.ManyToManyField(blank=True, related_name='company_requirements', to='subjects.interactiontype'),
         ),
         migrations.CreateModel(
             name='Api3Alternance',
@@ -317,5 +341,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(seed_areas_and_semesters, migrations.RunPython.noop),
         migrations.RunPython(seed_careers, migrations.RunPython.noop),
+        migrations.RunPython(seed_interaction_types, migrations.RunPython.noop),
     ]
 

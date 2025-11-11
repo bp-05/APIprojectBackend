@@ -9,6 +9,7 @@ from .models import (
     SubjectTechnicalCompetency,
     CompanyBoundaryCondition,
     CompanyRequirement,
+    InteractionType,
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
@@ -123,6 +124,15 @@ class CompanyBoundaryConditionSerializer(serializers.ModelSerializer):
 
 
 class CompanyRequirementSerializer(serializers.ModelSerializer):
+    # Exponer como lista de códigos usando el m2m 'interaction_types'
+    interaction_type = serializers.SlugRelatedField(
+        many=True,
+        source='interaction_types',
+        slug_field='code',
+        queryset=InteractionType.objects.all(),
+        required=False,
+    )
+
     class Meta:
         model = CompanyRequirement
         fields = [
@@ -139,6 +149,8 @@ class CompanyRequirementSerializer(serializers.ModelSerializer):
             'subject',
             'company',
         ]
+
+    # No es necesario sobreescribir create/update: DRF maneja m2m con SlugRelatedField
 
 
 class Api3AlternanceSerializer(serializers.ModelSerializer):
