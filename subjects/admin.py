@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 from simple_history.admin import SimpleHistoryAdmin
 from .models import (
     Subject,
@@ -76,6 +77,16 @@ class CompanyBoundaryConditionAdmin(admin.ModelAdmin):
 
 @admin.register(CompanyRequirement)
 class CompanyRequirementAdmin(admin.ModelAdmin):
+    class CompanyRequirementAdminForm(forms.ModelForm):
+        class Meta:
+            model = CompanyRequirement
+            fields = "__all__"
+            widgets = {
+                'interaction_types': forms.CheckboxSelectMultiple,
+            }
+
+    form = CompanyRequirementAdminForm
+
     def interaction_types_list(self, obj):
         return ", ".join(obj.interaction_types.values_list('code', flat=True))
 

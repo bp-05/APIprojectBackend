@@ -71,6 +71,10 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 
 - Requisitos de Empresa por Asignatura
   - `GET/POST /api/company-requirements/`, `GET/PUT/PATCH/DELETE /api/company-requirements/{id}/`
+  - Campo `interaction_type` (multi‑select): enviar/recibir como lista de códigos.
+    - Códigos válidos: `virtual`, `onsite_inacap`, `onsite_company`.
+    - Ejemplo (crear): `{ "sector": "Tecnología", ..., "interaction_type": ["virtual","onsite_inacap"], "subject": 12, "company": 5 }`
+    - Admin: el campo se edita con checkboxes y se puede filtrar por `interaction_types`.
 
 - Alternancia API 3
   - `GET/POST /api/alternances/`, `GET/PUT/PATCH/DELETE /api/alternances/{id}/`
@@ -86,6 +90,17 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - `GET/POST /api/form-templates/`, `GET/PUT/PATCH/DELETE /api/form-templates/{id}/`
 - `GET/POST /api/descriptors/`, `GET/PUT/PATCH/DELETE /api/descriptors/{id}/`
 - Permisos: `ADMIN`, `DAC`, `COORD` y grupo `vcm` ven todo; docentes solo pueden ver/gestionar descriptores de sus propias asignaturas.
+  - Validación al subir descriptor asociado a una asignatura:
+    - Se extrae el código de asignatura desde el PDF y se compara con el de la asignatura enviada.
+    - Si no se puede extraer: 400 con `"no es posible extraer el codigo de asignatura del pdf"`.
+    - Si no coincide: 400 con `"el descriptor no corresponde a la asignatura"`.
+  - Procesar descriptor: `POST /api/descriptors/{id}/process/`
+    - Si la asignatura ya existe y no tenía descriptor:
+      - Solo se sobrescriben los campos que realmente se extraen del PDF.
+      - `name`: se actualiza si el PDF trae nombre; si no, se conserva el actual.
+      - `hours`: se actualiza si se puede derivar desde la suma de `unit_hours` extraídas; si no, se conserva.
+      - `code` y `section`: no se cambian; se valida que el PDF corresponda.
+      - `area`, `semester`, `campus`, `api_type`: se conservan (no se reemplazan por valores por defecto del proceso).
 
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
