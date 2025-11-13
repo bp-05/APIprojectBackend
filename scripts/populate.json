@@ -164,7 +164,7 @@
       "shift": "diurna",
       "phase": "inicio",
       "hours": 72,
-      "api_type": 1,
+      "api_type": 2,
       "teacher_email": "doc3@example.com",
       "area": "Construcción",
       "career": "Técnico en Construcción",
