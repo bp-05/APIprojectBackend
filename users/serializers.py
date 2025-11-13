@@ -12,7 +12,7 @@ class UserMeSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'full_name',
-            'role', 'is_staff', 'is_superuser', 'date_joined'
+            'role', 'area', 'career', 'is_staff', 'is_superuser', 'date_joined'
         ]
 
     def get_full_name(self, obj):
@@ -22,7 +22,7 @@ class UserMeSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'is_active']
+        fields = ['id', 'email', 'first_name', 'last_name', 'role', 'area', 'career', 'is_active']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -33,7 +33,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'role', 'is_active', 'password', 'password2'
+            'role', 'area', 'career', 'is_active', 'password', 'password2'
         ]
 
     def validate(self, attrs):
@@ -59,7 +59,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'role', 'is_active', 'is_staff', 'is_superuser',
+            'role', 'area', 'career', 'is_active', 'is_staff', 'is_superuser',
             'password', 'password2'
         ]
         read_only_fields = ['id']

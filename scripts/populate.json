@@ -12,7 +12,16 @@
       "nombre": "Mario",
       "apellido": "Salas",
       "rol": "Director de carrera",
-      "password": "dc1"
+      "password": "dc1",
+      "area": "Informatica, Ciberseguridad Y Telecomunicaciones"
+    },
+    {
+      "email": "dc2@example.com",
+      "nombre": "Marta",
+      "apellido": "Rojas",
+      "rol": "Director de carrera",
+      "password": "dc2",
+      "area": "Administracion"
     },
     {
       "email": "da1@example.com",

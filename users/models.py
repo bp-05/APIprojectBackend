@@ -40,6 +40,20 @@ class User(AbstractUser):
     email = models.EmailField("email address", unique=True)
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.DOC)
+    area = models.ForeignKey(
+        'subjects.Area',
+        on_delete=models.SET_NULL,
+        related_name='users',
+        null=True,
+        blank=True,
+    )
+    career = models.ForeignKey(
+        'subjects.Career',
+        on_delete=models.SET_NULL,
+        related_name='users',
+        null=True,
+        blank=True,
+    )
     objects = UserManager()
 
     USERNAME_FIELD = "email"
@@ -53,4 +67,3 @@ class User(AbstractUser):
                 name="superuser_must_be_admin_role",
             )
         ]
-

@@ -42,6 +42,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - `GET/POST/PUT/PATCH/DELETE /api/users/` (admin gestiona usuarios)
   - `GET /api/users/teachers/` (ADMIN, DAC, grupo `vcm`): lista de docentes (rol `DOC`).
   - `GET/POST/PUT/PATCH/DELETE /api/teachers/` (ADMIN, DAC): gestión segura de docentes (rol `DOC`). Se fuerza `role='DOC'` y se limitan campos a `email`, `first_name`, `last_name`, `is_active` y `password`.
+  - Campos `area` y `career` (FK opcionales a `subjects.Area`/`subjects.Career`) permiten asociar directores de carrera u otros roles a su unidad académica. Si no se envían, permanecen en `null`.
+  - El rol `DC` puede CRUDear asignaturas y tablas relacionadas (unidades, competencias, condiciones, etc.) del área/carrera asignada: si tiene solo `area`, accede a todas las asignaturas de esa área; si tiene solo `career`, se limita a esa carrera; si tiene ambos, se usa la carrera. Sin datos, solo puede gestionar asignaturas donde es `teacher`.
 
 - Áreas y Semestres (solo lectura)
   - `GET /api/areas/`, `GET /api/areas/{id}/`
@@ -94,7 +96,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
     - Se extrae el código de asignatura desde el PDF y se compara con el de la asignatura enviada.
     - Si no se puede extraer: 400 con `"no es posible extraer el codigo de asignatura del pdf"`.
     - Si no coincide: 400 con `"el descriptor no corresponde a la asignatura"`.
-  - Procesar descriptor: `POST /api/descriptors/{id}/process/`
+- Procesar descriptor: `POST /api/descriptors/{id}/process/`
     - Si la asignatura ya existe y no tenía descriptor:
       - Solo se sobrescriben los campos que realmente se extraen del PDF.
       - `name`: se actualiza si el PDF trae nombre; si no, se conserva el actual.
@@ -104,6 +106,12 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 
 - Exportación a Excel
   - Incluida via `exports_app.urls` bajo `/api/`
+
+## Datos iniciales (`scripts/populate.json`)
+- Después de cada `migrate`, `users.signals.populate_after_migrate` lee `scripts/populate.json` (si existe) y hace _upsert_ de usuarios, empresas, asignaturas y problem statements.
+- En la sección `users` del JSON puedes definir `role`, `password` (solo al crear), además de `area` y `career`. Estos campos ahora enlazan con `subjects.Area` y `subjects.Career`, creando los registros si aún no existen. Esto se usa para los directores de carrera del archivo de ejemplo.
+- El proceso es idempotente: actualiza nombres/roles/áreas/carreras si cambian, pero no sobreescribe contraseñas existentes.
+- Para reimportar manualmente basta con ejecutar `python manage.py migrate` (reaplica la señal) o abrir un shell (`python manage.py shell`) y llamar `from users import signals; signals._load_populate_json()`.
 
 ## Proveedor de IA
 - Configurable por `.env` con `AI_PROVIDER`:

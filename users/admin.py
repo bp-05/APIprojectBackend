@@ -15,13 +15,13 @@ class UserAdmin(BaseUserAdmin):
         ("Información personal", {"fields": ("first_name", "last_name")}),
         ("Permisos", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Fechas importantes", {"fields": ("last_login", "date_joined")}),
-        ("Rol y permisos adicionales", {"fields": ("role",)}),
+        ("Rol y permisos adicionales", {"fields": ("role", "area", "career")}),
     )
 
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
-            "fields": ("email", "first_name", "last_name", "role", "password1", "password2"),
+            "fields": ("email", "first_name", "last_name", "role", "area", "career", "password1", "password2"),
         }),
     )
 
@@ -31,6 +31,8 @@ class UserAdmin(BaseUserAdmin):
         "first_name",
         "last_name",
         "role",
+        "area",
+        "career",
         "is_staff",
         "is_active",
         "is_superuser",
@@ -43,4 +45,3 @@ class UserAdmin(BaseUserAdmin):
 admin.site.site_header = "Panel Administración API"
 admin.site.site_title = "Admin API"
 admin.site.index_title = "Gestión de datos"
-

@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from django.db.models import Q
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -36,6 +37,20 @@ from .serializers import (
 from .permissions import IsSubjectTeacherOrAdmin
 
 
+def _director_scope_q(user, subject_field='subject'):
+    """Return a Q object restricting records to the director's area/career."""
+    if getattr(user, 'role', None) != 'DC':
+        return None
+    prefix = f'{subject_field}__' if subject_field else ''
+    career_id = getattr(user, 'career_id', None)
+    if career_id:
+        return Q(**{f'{prefix}career_id': career_id})
+    area_id = getattr(user, 'area_id', None)
+    if area_id:
+        return Q(**{f'{prefix}area_id': area_id})
+    return None
+
+
 class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all().select_related('teacher', 'area', 'career')
     serializer_class = SubjectSerializer
@@ -47,10 +62,13 @@ class SubjectViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if (
             getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD', 'DC']
+            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user, subject_field='')
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(teacher=user))
         return qs.filter(teacher=user)
 
     @action(detail=False, methods=['get'], url_path=r'by-code/(?P<code>[^/]+)/(?P<section>[^/]+)')
@@ -114,6 +132,9 @@ class SubjectUnitViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -132,6 +153,9 @@ class SubjectTechnicalCompetencyViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -149,6 +173,9 @@ class CompanyBoundaryConditionViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -166,6 +193,9 @@ class CompanyRequirementViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -183,6 +213,9 @@ class Api3AlternanceViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -200,6 +233,9 @@ class ApiType2CompletionViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -217,6 +253,9 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 
 
@@ -241,5 +280,8 @@ class SubjectPhaseScheduleViewSet(viewsets.ModelViewSet):
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
 

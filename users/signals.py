@@ -87,6 +87,59 @@ def _load_populate_json():
         logger.error("Modelo User no disponible: %s", e)
         User = None
 
+    # Optional FK helpers for Area/Career references from populate.json
+    try:
+        Area = apps.get_model('subjects', 'Area')
+    except (LookupError, ImproperlyConfigured):
+        Area = None
+    try:
+        Career = apps.get_model('subjects', 'Career')
+    except (LookupError, ImproperlyConfigured):
+        Career = None
+
+    area_cache = {}
+    career_cache = {}
+
+    def _resolve_area(name: str):
+        if not (Area and name):
+            return None
+        norm = _norm_str(name)
+        if norm in area_cache:
+            return area_cache[norm]
+        obj = Area.objects.filter(name__iexact=name).first()
+        if obj is None:
+            for existing in Area.objects.all():
+                if _norm_str(existing.name) == norm:
+                    obj = existing
+                    break
+        if obj is None:
+            obj = Area.objects.create(name=name)
+        area_cache[norm] = obj
+        return obj
+
+    def _resolve_career(name: str, area_obj):
+        if not (Career and name):
+            return None
+        norm = _norm_str(name)
+        if norm in career_cache:
+            obj = career_cache[norm]
+            # keep mapping in sync with area updates
+            if area_obj and obj and getattr(obj, 'area_id', None) != getattr(area_obj, 'id', None):
+                obj.area = area_obj
+                obj.save(update_fields=['area'])
+            return obj
+        obj = Career.objects.filter(name__iexact=name).first()
+        if obj is None:
+            if not area_obj:
+                logger.warning("Populate usuarios: no se pudo crear Career '%s' porque falta area", name)
+                return None
+            obj = Career.objects.create(name=name, area=area_obj)
+        elif area_obj and obj.area_id != getattr(area_obj, 'id', None):
+            obj.area = area_obj
+            obj.save(update_fields=['area'])
+        career_cache[norm] = obj
+        return obj
+
     users = payload.get('users') or []
     if users and User is not None:
         try:
@@ -100,6 +153,10 @@ def _load_populate_json():
                     role_label = u.get('rol') or u.get('role')
                     role_code = _role_code_for_label(role_label) or User.Role.DOC
                     password = u.get('password')
+                    area_name = (u.get('area') or '').strip()
+                    career_name = (u.get('career') or '').strip()
+                    area_obj = _resolve_area(area_name) if area_name else None
+                    career_obj = _resolve_career(career_name, area_obj) if career_name else None
 
                     obj, created = User.objects.get_or_create(
                         email=email,
@@ -107,6 +164,8 @@ def _load_populate_json():
                             'first_name': first_name,
                             'last_name': last_name,
                             'role': role_code,
+                            'area': area_obj,
+                            'career': career_obj,
                         },
                     )
                     updated = False
@@ -119,6 +178,12 @@ def _load_populate_json():
                         updated = True
                     if getattr(obj, 'role', None) != role_code:
                         obj.role = role_code
+                        updated = True
+                    if area_name and obj.area_id != getattr(area_obj, 'id', None):
+                        obj.area = area_obj
+                        updated = True
+                    if career_name and obj.career_id != getattr(career_obj, 'id', None):
+                        obj.career = career_obj
                         updated = True
                     # Only set password on create to avoid overwriting local changes
                     if created and password:
