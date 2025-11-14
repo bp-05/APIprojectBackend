@@ -20,10 +20,10 @@ class ProblemStatementAdmin(admin.ModelAdmin):
 
 @admin.register(CounterpartContact)
 class CounterpartContactAdmin(admin.ModelAdmin):
-    list_display = ("id", "problem_statement", "name", "counterpart_area", "role")
-    search_fields = ("problem_statement__subject__code", "problem_statement__subject__name", "name", "counterpart_area", "role")
-    autocomplete_fields = ("problem_statement",)
-    ordering = ("problem_statement", "id")
+    list_display = ("id", "company", "name", "rut", "phone", "email", "counterpart_area", "role")
+    search_fields = ("company__name", "name", "rut", "phone", "email", "counterpart_area", "role")
+    autocomplete_fields = ("company",)
+    ordering = ("company", "id")
 
 
 @admin.register(CompanyEngagementScope)

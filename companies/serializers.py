@@ -22,11 +22,11 @@ class CompanySerializer(serializers.ModelSerializer):
 class CounterpartContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = CounterpartContact
-        fields = ['id', 'name', 'counterpart_area', 'role']
+        fields = ['id', 'name', 'rut', 'phone', 'email', 'counterpart_area', 'role']
 
 
 def _default_contacts_list():
-    return [{"name": "", "counterpart_area": "", "role": ""}]
+    return [{"name": "", "rut": "", "phone": "", "email": "", "counterpart_area": "", "role": ""}]
 
 
 class ProblemStatementSerializer(serializers.ModelSerializer):
@@ -54,7 +54,18 @@ class ProblemStatementSerializer(serializers.ModelSerializer):
         if not contacts_data:
             contacts_data = _default_contacts_list()
         for item in contacts_data:
-            CounterpartContact.objects.create(problem_statement=instance, **item)
+            CounterpartContact.objects.create(company=instance.company, **item)
+        return instance
+
+    def update(self, instance, validated_data):
+        contacts_data = validated_data.pop('counterpart_contacts', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if contacts_data is not None:
+            CounterpartContact.objects.filter(company=instance.company).delete()
+            for item in contacts_data:
+                CounterpartContact.objects.create(company=instance.company, **item)
         return instance
 
 
@@ -102,12 +113,7 @@ class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def update(self, instance, validated_data):
-        contacts_data = validated_data.pop('counterpart_contacts', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        if contacts_data is not None:
-            instance.counterpart_contacts.all().delete()
-            for item in contacts_data:
-                CounterpartContact.objects.create(problem_statement=instance, **item)
         return instance

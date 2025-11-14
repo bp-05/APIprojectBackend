@@ -34,18 +34,25 @@ class ProblemStatement(models.Model):  # ficha proyecto api problemática con co
     def __str__(self):
         return f"Problem statement: {self.subject.code} - {self.company.name}"
 
+    @property
+    def counterpart_contacts(self):
+        return self.company.counterpart_contacts.all()
 
-class CounterpartContact(models.Model): #ficha proyecto api ¿Quiénes participarán de la identificación de la problemática? 
-    problem_statement = models.ForeignKey('companies.ProblemStatement', on_delete=models.CASCADE, related_name='counterpart_contacts')
+
+class CounterpartContact(models.Model): #ficha proyecto api ¿Quiénes participarán de la identificación de la problemática?
+    company = models.ForeignKey('companies.Company', on_delete=models.CASCADE, related_name='counterpart_contacts')
     name = models.CharField(max_length=255, blank=True, default="")
+    rut = models.CharField(max_length=50, blank=True, default="")
+    phone = models.CharField(max_length=50, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
     counterpart_area = models.CharField(max_length=255, blank=True, default="")
     role = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
-        ordering = ("problem_statement", "id")
+        ordering = ("company", "id")
 
     def __str__(self):
-        return f"Contact {self.name} - {self.problem_statement_id}"
+        return f"Contact {self.name} - {self.company_id}"
 
 
 class CompanyEngagementScope(models.Model):  # alcance con contraparte, movido desde subjects

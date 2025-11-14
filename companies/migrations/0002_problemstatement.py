@@ -25,17 +25,19 @@ class Migration(migrations.Migration):
             ],
             options={'ordering': ('subject', 'company')},
         ),
-        # Removed uniqueness constraint on (subject, company) to allow multiple problem statements per pair
         migrations.CreateModel(
             name='CounterpartContact',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(blank=True, default='', max_length=255)),
+                ('rut', models.CharField(blank=True, default='', max_length=50)),
+                ('phone', models.CharField(blank=True, default='', max_length=50)),
+                ('email', models.EmailField(blank=True, default='', max_length=254)),
                 ('counterpart_area', models.CharField(blank=True, default='', max_length=255)),
                 ('role', models.CharField(blank=True, default='', max_length=255)),
-                ('problem_statement', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='counterpart_contacts', to='companies.problemstatement')),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='counterpart_contacts', to='companies.company')),
             ],
-            options={'ordering': ('problem_statement', 'id')},
+            options={'ordering': ('company', 'id')},
         ),
         migrations.CreateModel(
             name='CompanyEngagementScope',

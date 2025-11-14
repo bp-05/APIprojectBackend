@@ -230,7 +230,8 @@ Companies
 - ProblemStatement
   - Depende: `subjects.Subject`, `companies.Company`
 - CounterpartContact
-  - Depende: `companies.ProblemStatement`
+  - Depende: `companies.Company`
+  - Campos: `name`, `rut` (texto <= 50), `phone`, `email`, `counterpart_area`, `role`
 - CompanyEngagementScope
   - Depende: `companies.Company`
   - Reglas: Ãºnico por (`company`, `subject_code`, `subject_section`)
