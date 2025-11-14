@@ -276,7 +276,7 @@ class Migration(migrations.Migration):
             options={'ordering': ('code',)},
         ),
         migrations.CreateModel(
-            name='CompanyRequirement',
+            name='PossibleCounterpart',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('sector', models.CharField(max_length=100)),
@@ -287,19 +287,19 @@ class Migration(migrations.Migration):
                 ('has_guide', models.BooleanField(default=False)),
                 ('can_receive_alternance', models.BooleanField(default=False)),
                 ('alternance_students_quota', models.PositiveIntegerField(default=0)),
-                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='company_requirements', to='subjects.subject')),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='requirements', to='companies.company')),
+                ('subject', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='possible_counterparts', to='subjects.subject')),
+                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='possible_counterparts', to='companies.company')),
             ],
-            options={'ordering': ('subject',)},
+            options={'ordering': ('subject', 'company')},
         ),
         migrations.AddConstraint(
-            model_name='companyrequirement',
-            constraint=models.UniqueConstraint(fields=('subject', 'company'), name='uniq_requirement_subject_company'),
+            model_name='possiblecounterpart',
+            constraint=models.UniqueConstraint(fields=('subject', 'company'), name='uniq_possible_counterpart_subject_company'),
         ),
         migrations.AddField(
-            model_name='companyrequirement',
+            model_name='possiblecounterpart',
             name='interaction_types',
-            field=models.ManyToManyField(blank=True, related_name='company_requirements', to='subjects.interactiontype'),
+            field=models.ManyToManyField(blank=True, related_name='possible_counterparts', to='subjects.interactiontype'),
         ),
         migrations.CreateModel(
             name='Api3Alternance',

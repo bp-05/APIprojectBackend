@@ -8,7 +8,7 @@ from .models import (
     SubjectUnit,
     SubjectTechnicalCompetency,
     CompanyBoundaryCondition,
-    CompanyRequirement,
+    PossibleCounterpart,
     InteractionType,
     Api3Alternance,
     ApiType2Completion,
@@ -123,7 +123,7 @@ class CompanyBoundaryConditionSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
 
-class CompanyRequirementSerializer(serializers.ModelSerializer):
+class PossibleCounterpartSerializer(serializers.ModelSerializer):
     # Exponer como lista de códigos usando el m2m 'interaction_types'
     interaction_type = serializers.SlugRelatedField(
         many=True,
@@ -134,7 +134,7 @@ class CompanyRequirementSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = CompanyRequirement
+        model = PossibleCounterpart
         fields = [
             'id',
             'sector',
@@ -149,6 +149,9 @@ class CompanyRequirementSerializer(serializers.ModelSerializer):
             'subject',
             'company',
         ]
+        extra_kwargs = {
+            'subject': {'allow_null': True, 'required': False},
+        }
 
     # No es necesario sobreescribir create/update: DRF maneja m2m con SlugRelatedField
 

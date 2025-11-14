@@ -9,7 +9,7 @@ from .models import (
     SubjectUnit,
     SubjectTechnicalCompetency,
     CompanyBoundaryCondition,
-    CompanyRequirement,
+    PossibleCounterpart,
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
@@ -75,17 +75,17 @@ class CompanyBoundaryConditionAdmin(admin.ModelAdmin):
     ordering = ("subject",)
 
 
-@admin.register(CompanyRequirement)
-class CompanyRequirementAdmin(admin.ModelAdmin):
-    class CompanyRequirementAdminForm(forms.ModelForm):
+@admin.register(PossibleCounterpart)
+class PossibleCounterpartAdmin(admin.ModelAdmin):
+    class PossibleCounterpartAdminForm(forms.ModelForm):
         class Meta:
-            model = CompanyRequirement
+            model = PossibleCounterpart
             fields = "__all__"
             widgets = {
                 'interaction_types': forms.CheckboxSelectMultiple,
             }
 
-    form = CompanyRequirementAdminForm
+    form = PossibleCounterpartAdminForm
 
     def interaction_types_list(self, obj):
         return ", ".join(obj.interaction_types.values_list('code', flat=True))
@@ -96,7 +96,7 @@ class CompanyRequirementAdmin(admin.ModelAdmin):
     list_filter = ("interaction_types", "worked_before", "can_receive_alternance")
     search_fields = ("subject__code", "subject__name", "company__name")
     autocomplete_fields = ("subject", "company")
-    ordering = ("subject",)
+    ordering = ("subject", "company")
 
 
 @admin.register(Api3Alternance)

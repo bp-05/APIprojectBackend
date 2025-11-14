@@ -12,27 +12,35 @@ class InteractionType(models.Model):
         return self.label
 
 
-class CompanyRequirement(models.Model): #seccion 3 ficha api empresas/instituciones
+class PossibleCounterpart(models.Model): # seccion 3 ficha api empresas/instituciones
     sector = models.CharField(max_length=100)
     worked_before = models.BooleanField(default=False)
     interest_collaborate = models.BooleanField(default=False)
     can_develop_activities = models.BooleanField(default=False)
     willing_design_project = models.BooleanField(default=False)
-    interaction_types = models.ManyToManyField('subjects.InteractionType', related_name='company_requirements', blank=True)
+    interaction_types = models.ManyToManyField('subjects.InteractionType', related_name='possible_counterparts', blank=True)
     has_guide = models.BooleanField(default=False)
     can_receive_alternance = models.BooleanField(default=False)
     alternance_students_quota = models.PositiveIntegerField(default=0)
-    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='company_requirements')
-    company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='requirements')
+    subject = models.ForeignKey(
+        'subjects.Subject',
+        on_delete=models.CASCADE,
+        related_name='possible_counterparts',
+        null=True,
+        blank=True,
+    )
+    company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='possible_counterparts')
 
     class Meta:
-        ordering = ("subject",)
+        ordering = ("subject", "company")
         constraints = [
-            models.UniqueConstraint(fields=("subject", "company"), name="uniq_requirement_subject_company"),
+            models.UniqueConstraint(fields=("subject", "company"), name="uniq_possible_counterpart_subject_company"),
         ]
 
     def __str__(self):
-        return f"Requirement for {self.subject.code}"
+        subject_label = self.subject.code if self.subject_id else "Unassigned"
+        company_label = getattr(self.company, 'name', 'N/A')
+        return f"Possible counterpart for {subject_label} - {company_label}"
 
 
 class Area(models.Model):

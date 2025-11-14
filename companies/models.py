@@ -6,7 +6,6 @@ class Company(models.Model): #seccion 4 ficha api
     name = models.CharField(max_length=200)
     address = models.CharField(max_length=255)
     management_address = models.CharField(max_length=255, blank=True, default="")
-    spys_responsible_name = models.CharField(max_length=200)
     email = models.EmailField()
     phone = models.CharField(max_length=50)
     employees_count = models.PositiveIntegerField(default=0)

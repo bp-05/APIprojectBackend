@@ -15,7 +15,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=200)),
                 ('address', models.CharField(max_length=255)),
                 ('management_address', models.CharField(blank=True, default='', max_length=255)),
-                ('spys_responsible_name', models.CharField(max_length=200)),
                 ('email', models.EmailField(max_length=254)),
                 ('phone', models.CharField(max_length=50)),
                 ('employees_count', models.PositiveIntegerField(default=0)),

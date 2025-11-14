@@ -217,7 +217,6 @@ def _load_populate_json():
                             continue
                         address = (c.get('address') or c.get('direccion') or '').strip()
                         management_address = (c.get('management_address') or c.get('direccion_administracion') or '').strip()
-                        spys_responsible_name = (c.get('spys_responsible_name') or c.get('responsable_spys') or '').strip()
                         email = (c.get('email') or c.get('correo') or '').strip()
                         phone = (c.get('phone') or c.get('telefono') or '').strip()
                         employees_count = _coerce_int(c.get('employees_count') or c.get('cantidad_empleados') or c.get('empleados'))
@@ -228,7 +227,6 @@ def _load_populate_json():
                             defaults={
                                 'address': address,
                                 'management_address': management_address,
-                                'spys_responsible_name': spys_responsible_name,
                                 'email': email,
                                 'phone': phone,
                                 'employees_count': employees_count,
@@ -241,9 +239,6 @@ def _load_populate_json():
                             updated = True
                         if obj.management_address != management_address:
                             obj.management_address = management_address
-                            updated = True
-                        if obj.spys_responsible_name != spys_responsible_name:
-                            obj.spys_responsible_name = spys_responsible_name
                             updated = True
                         if obj.email != email:
                             obj.email = email

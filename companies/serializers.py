@@ -12,7 +12,6 @@ class CompanySerializer(serializers.ModelSerializer):
             'name',
             'address',
             'management_address',
-            'spys_responsible_name',
             'email',
             'phone',
             'employees_count',

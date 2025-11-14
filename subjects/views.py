@@ -13,7 +13,7 @@ from .models import (
     SubjectUnit,
     SubjectTechnicalCompetency,
     CompanyBoundaryCondition,
-    CompanyRequirement,
+    PossibleCounterpart,
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
@@ -28,7 +28,7 @@ from .serializers import (
     SubjectUnitSerializer,
     SubjectTechnicalCompetencySerializer,
     CompanyBoundaryConditionSerializer,
-    CompanyRequirementSerializer,
+    PossibleCounterpartSerializer,
     Api3AlternanceSerializer,
     ApiType2CompletionSerializer,
     ApiType3CompletionSerializer,
@@ -179,9 +179,9 @@ class CompanyBoundaryConditionViewSet(viewsets.ModelViewSet):
         return qs.filter(subject__teacher=user)
 
 
-class CompanyRequirementViewSet(viewsets.ModelViewSet):
-    queryset = CompanyRequirement.objects.all().select_related('subject', 'company')
-    serializer_class = CompanyRequirementSerializer
+class PossibleCounterpartViewSet(viewsets.ModelViewSet):
+    queryset = PossibleCounterpart.objects.all().select_related('subject', 'company')
+    serializer_class = PossibleCounterpartSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):

@@ -33,7 +33,7 @@ from subjects.views import (
     SubjectUnitViewSet,
     SubjectTechnicalCompetencyViewSet,
     CompanyBoundaryConditionViewSet,
-    CompanyRequirementViewSet,
+    PossibleCounterpartViewSet,
     Api3AlternanceViewSet,
     ApiType2CompletionViewSet,
     ApiType3CompletionViewSet,
@@ -59,7 +59,7 @@ router.register(r'subject-units', SubjectUnitViewSet, basename='subject-unit')
 router.register(r'subject-competencies', SubjectTechnicalCompetencyViewSet, basename='subject-competency')
 router.register(r'subject-phase-schedules', SubjectPhaseScheduleViewSet, basename='subject-phase-schedule')
 router.register(r'boundary-conditions', CompanyBoundaryConditionViewSet, basename='boundary-condition')
-router.register(r'company-requirements', CompanyRequirementViewSet, basename='company-requirement')
+router.register(r'possible-counterparts', PossibleCounterpartViewSet, basename='possible-counterpart')
 router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')
 router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-completion')
 router.register(r'api3-completions', ApiType3CompletionViewSet, basename='api3-completion')
