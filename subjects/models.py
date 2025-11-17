@@ -3,12 +3,52 @@ from django.conf import settings
 from .utils import get_default_period_from_settings
 
 
+PERIOD_SEASON_CHOICES = (
+    ("O", "Otoño"),
+    ("P", "Primavera"),
+)
+
+
+class PeriodSetting(models.Model):
+    """
+    Stores the current academic period (single row table editable from admin/front).
+    """
+
+    SINGLETON_PK = 1
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=SINGLETON_PK, editable=False)
+    period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES)
+    period_year = models.PositiveIntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Periodo actual"
+        verbose_name_plural = "Periodo actual"
+
+    def __str__(self):
+        return f"{self.period_season}-{self.period_year}"
+
+    def save(self, *args, **kwargs):
+        self.pk = self.SINGLETON_PK
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_active(cls):
+        default_season, default_year = get_default_period_from_settings()
+        defaults = {
+            "period_season": default_season,
+            "period_year": default_year,
+        }
+        obj, _ = cls.objects.get_or_create(pk=cls.SINGLETON_PK, defaults=defaults)
+        return obj
+
 def _default_period_year():
-    return get_default_period_from_settings()[1]
+    return PeriodSetting.get_active().period_year
 
 
 def _default_period_season():
-    return get_default_period_from_settings()[0]
+    return PeriodSetting.get_active().period_season
+
 
 class InteractionType(models.Model):
     code = models.CharField(max_length=32, unique=True)
@@ -85,16 +125,12 @@ class Subject(models.Model):
     code = models.CharField(max_length=20) #olbigatorio
     section = models.CharField(max_length=30, default="1")  # mandatory, text up to 30 chars
     name = models.CharField(max_length=200) #olbigatorio
-    campus = models.CharField(max_length=50, default="chillan")
+    campus = models.CharField(max_length=50, default="Chillán")
     # Jornada: diurna | vespertina
     shift = models.CharField(
         max_length=10,
         choices=(("diurna", "diurna"), ("vespertina", "vespertina")),
         default="diurna",
-    )
-    PERIOD_SEASON_CHOICES = (
-        ("O", "Otoño"),
-        ("P", "Primavera"),
     )
     period_year = models.PositiveIntegerField(default=_default_period_year)
     period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES, default=_default_period_season)
@@ -188,7 +224,7 @@ class Subject(models.Model):
 class PeriodPhaseSchedule(models.Model):
     PHASE_CHOICES = Subject.PHASE_CHOICES
     period_year = models.PositiveIntegerField()
-    period_season = models.CharField(max_length=1, choices=Subject.PERIOD_SEASON_CHOICES)
+    period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES)
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
     days_allocated = models.PositiveIntegerField(default=0)
     start_date = models.DateField(null=True, blank=True)

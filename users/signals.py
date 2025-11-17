@@ -13,7 +13,7 @@ from django.db.models.signals import post_migrate
 from django.utils import timezone
 
 from subjects.utils import (
-    get_default_period_from_settings,
+    get_current_period,
     normalize_season_token,
     parse_period_string,
 )
@@ -354,7 +354,7 @@ def _load_populate_json():
                         raw_period = (s.get('period') or '').strip()
                         season_token = (s.get('period_season') or '').strip()
                         year_token = s.get('period_year')
-                        default_season, default_year = get_default_period_from_settings()
+                        default_season, default_year = get_current_period()
                         season = normalize_season_token(season_token)
                         year = _coerce_int(year_token, 0)
                         if raw_period:

@@ -35,7 +35,7 @@ from .serializers import (
     PeriodPhaseScheduleSerializer,
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator
-from .utils import get_default_period_from_settings, normalize_season_token, parse_period_string
+from .utils import get_current_period, normalize_season_token, parse_period_string
 
 
 def _director_scope_q(user, subject_field='subject'):
@@ -97,7 +97,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
                     year = int(period_year)
                 except ValueError:
                     return Response({'detail': 'period_year debe ser numérico.'}, status=400)
-        default_season, default_year = get_default_period_from_settings()
+        default_season, default_year = get_current_period()
         season = season or default_season
         year = year or default_year
         obj = qs.filter(period_year=year, period_season=season).first()

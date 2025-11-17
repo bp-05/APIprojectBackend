@@ -126,9 +126,7 @@
     {
       "code": "INF-101",
       "section": "1",
-      "period": "P-2025",
       "name": "Fundamentos de Programación",
-      "campus": "chillan",
       "shift": "diurna",
       "phase": "inicio",
       "hours": 60,
@@ -141,9 +139,7 @@
     {
       "code": "INF-205V",
       "section": "1",
-      "period": "P-2025",
       "name": "Desarrollo Web Avanzado",
-      "campus": "chillan",
       "shift": "vespertina",
       "phase": "inicio",
       "hours": 80,
@@ -156,9 +152,7 @@
     {
       "code": "CONST-103",
       "section": "1",
-      "period": "P-2025",
       "name": "Estructuras y Cálculo",
-      "campus": "chillan",
       "shift": "diurna",
       "phase": "inicio",
       "hours": 72,
@@ -171,9 +165,7 @@
     {
       "code": "ADM-204V",
       "section": "2",
-      "period": "P-2025",
       "name": "Gestión de Proyectos",
-      "campus": "chillan",
       "shift": "vespertina",
       "phase": "inicio",
       "hours": 64,
@@ -186,9 +178,7 @@
     {
       "code": "INF-306",
       "section": "1",
-      "period": "P-2025",
       "name": "Inteligencia Artificial y Machine Learning",
-      "campus": "chillan",
       "shift": "diurna",
       "phase": "inicio",
       "hours": 96,

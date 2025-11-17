@@ -6,6 +6,7 @@ from .models import (
     Area,
     Career,
     SemesterLevel,
+    PeriodSetting,
     SubjectUnit,
     SubjectTechnicalCompetency,
     CompanyBoundaryCondition,
@@ -129,6 +130,15 @@ class PeriodPhaseScheduleAdmin(admin.ModelAdmin):
     list_filter = ("period_year", "period_season", "phase")
     search_fields = ("period_year", "phase")
     ordering = ("period_year", "period_season", "phase")
+
+
+@admin.register(PeriodSetting)
+class PeriodSettingAdmin(admin.ModelAdmin):
+    list_display = ("period_season", "period_year", "updated_at")
+    fields = ("period_season", "period_year")
+
+    def has_add_permission(self, request):
+        return False
 
 ## CompanyEngagementScope admin movido a companies.admin
 

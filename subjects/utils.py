@@ -1,7 +1,9 @@
 import unicodedata
 from typing import Optional, Tuple
 
+from django.apps import apps
 from django.conf import settings
+from django.db.utils import OperationalError, ProgrammingError
 from django.utils import timezone
 
 
@@ -65,3 +67,21 @@ def get_default_period_from_settings() -> Tuple[str, int]:
     now = timezone.now()
     fallback_season = "O" if now.month <= 6 else "P"
     return fallback_season, now.year
+
+
+def get_current_period() -> Tuple[str, int]:
+    """
+    Returns the current period stored in the database (PeriodSetting singleton).
+    Falls back to settings/env when the table is not ready yet.
+    """
+    try:
+        PeriodSetting = apps.get_model("subjects", "PeriodSetting")
+    except LookupError:
+        return get_default_period_from_settings()
+    try:
+        period = PeriodSetting.objects.filter(pk=PeriodSetting.SINGLETON_PK).first()
+    except (OperationalError, ProgrammingError):
+        return get_default_period_from_settings()
+    if period:
+        return period.period_season, period.period_year
+    return get_default_period_from_settings()
