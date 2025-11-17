@@ -10,6 +10,13 @@ from django.dispatch import receiver
 from django.apps import apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate
+from django.utils import timezone
+
+from subjects.utils import (
+    get_default_period_from_settings,
+    normalize_season_token,
+    parse_period_string,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -344,6 +351,22 @@ def _load_populate_json():
                         if not area_obj or not sem_obj:
                             logger.warning("Subject omitido por FK faltante: code=%s section=%s area=%s semester=%s", code, section, area_name, semester_val)
                             continue
+                        raw_period = (s.get('period') or '').strip()
+                        season_token = (s.get('period_season') or '').strip()
+                        year_token = s.get('period_year')
+                        default_season, default_year = get_default_period_from_settings()
+                        season = normalize_season_token(season_token)
+                        year = _coerce_int(year_token, 0)
+                        if raw_period:
+                            parsed_season, parsed_year = parse_period_string(raw_period)
+                            if parsed_season:
+                                season = parsed_season
+                            if parsed_year:
+                                year = parsed_year
+                        if season not in {'O', 'P'}:
+                            season = default_season
+                        if year <= 0:
+                            year = default_year
 
                         career_obj = None
                         if career_name:
@@ -366,6 +389,8 @@ def _load_populate_json():
                         obj, created = Subject.objects.get_or_create(
                             code=code,
                             section=section,
+                            period_year=year,
+                            period_season=season,
                             defaults={
                                 'name': name,
                                 'campus': campus,

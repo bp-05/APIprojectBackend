@@ -13,17 +13,17 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
-    SubjectPhaseSchedule,
+    PeriodPhaseSchedule,
 )
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "section", "name", "campus", "shift", "phase", "hours", "api_type", "teacher", "area", "career", "semester")
-    list_filter = ( "api_type", "area", "career", "semester", "section", "shift", "phase")
+    list_display = ("id", "code", "section", "period_code", "name", "campus", "shift", "phase", "hours", "api_type", "teacher", "area", "career", "semester")
+    list_filter = ("period_year", "period_season", "api_type", "area", "career", "semester", "section", "shift", "phase")
     search_fields = ("code", "section", "name", "teacher__email", "teacher__first_name", "teacher__last_name")
     autocomplete_fields = ("teacher", "area", "career", "semester")
-    ordering = ("code", "section")
+    ordering = ("code", "section", "period_year", "period_season")
 
 
 @admin.register(Area)
@@ -123,13 +123,12 @@ class ApiType3CompletionAdmin(admin.ModelAdmin):
     ordering = ("subject",)
 
 
-@admin.register(SubjectPhaseSchedule)
-class SubjectPhaseScheduleAdmin(admin.ModelAdmin):
-    list_display = ("id", "subject", "phase", "days_allocated", "start_date", "end_date")
-    list_filter = ("phase",)
-    search_fields = ("subject__code", "subject__name")
-    autocomplete_fields = ("subject",)
-    ordering = ("subject", "phase")
+@admin.register(PeriodPhaseSchedule)
+class PeriodPhaseScheduleAdmin(admin.ModelAdmin):
+    list_display = ("id", "period_season", "period_year", "phase", "days_allocated", "start_date", "end_date")
+    list_filter = ("period_year", "period_season", "phase")
+    search_fields = ("period_year", "phase")
+    ordering = ("period_year", "period_season", "phase")
 
 ## CompanyEngagementScope admin movido a companies.admin
 

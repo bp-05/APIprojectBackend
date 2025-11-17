@@ -1,5 +1,14 @@
 from django.db import models
 from django.conf import settings
+from .utils import get_default_period_from_settings
+
+
+def _default_period_year():
+    return get_default_period_from_settings()[1]
+
+
+def _default_period_season():
+    return get_default_period_from_settings()[0]
 
 class InteractionType(models.Model):
     code = models.CharField(max_length=32, unique=True)
@@ -83,6 +92,12 @@ class Subject(models.Model):
         choices=(("diurna", "diurna"), ("vespertina", "vespertina")),
         default="diurna",
     )
+    PERIOD_SEASON_CHOICES = (
+        ("O", "Otoño"),
+        ("P", "Primavera"),
+    )
+    period_year = models.PositiveIntegerField(default=_default_period_year)
+    period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES, default=_default_period_season)
     # Fase/estado manual de avance
     PHASE_CHOICES = (
         ("inicio", "Inicio"),
@@ -112,11 +127,14 @@ class Subject(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=("code", "section"), name="uniq_subject_code_section"),
+            models.UniqueConstraint(
+                fields=("code", "section", "period_year", "period_season"),
+                name="uniq_subject_code_section_period",
+            ),
         ]
 
     def __str__(self):
-        return f"{self.code} (Sec. {self.section}) - {self.name}"
+        return f"{self.code} (Sec. {self.section}, {self.period_code}) - {self.name}"
 
     def save(self, *args, **kwargs):
         # Infer shift from subject code: if code contains 'V' (case-insensitive), it's vespertina; otherwise diurna.
@@ -124,23 +142,69 @@ class Subject(models.Model):
             self.shift = "vespertina" if "V" in self.code.upper() else "diurna"
         super().save(*args, **kwargs)
 
+    @property
+    def period_code(self) -> str:
+        return f"{self.period_season}-{self.period_year}"
 
-class SubjectPhaseSchedule(models.Model):
+    def get_phase_schedule(self, phase=None):
+        phase_key = phase or self.phase
+        return PeriodPhaseSchedule.objects.filter(
+            period_year=self.period_year,
+            period_season=self.period_season,
+            phase=phase_key,
+        ).first()
+
+    @property
+    def phase_start_date(self):
+        schedule = self.get_phase_schedule()
+        return getattr(schedule, "start_date", None)
+
+    @property
+    def phase_end_date(self):
+        schedule = self.get_phase_schedule()
+        return getattr(schedule, "end_date", None)
+
+    @property
+    def process_start_date(self):
+        if not self.pk:
+            return None
+        qs = PeriodPhaseSchedule.objects.filter(
+            period_year=self.period_year,
+            period_season=self.period_season,
+        )
+        return qs.aggregate(models.Min("start_date")).get("start_date__min")
+
+    @property
+    def process_end_date(self):
+        if not self.pk:
+            return None
+        qs = PeriodPhaseSchedule.objects.filter(
+            period_year=self.period_year,
+            period_season=self.period_season,
+        )
+        return qs.aggregate(models.Max("end_date")).get("end_date__max")
+
+
+class PeriodPhaseSchedule(models.Model):
     PHASE_CHOICES = Subject.PHASE_CHOICES
-    subject = models.ForeignKey('subjects.Subject', on_delete=models.CASCADE, related_name='phase_schedules')
+    period_year = models.PositiveIntegerField()
+    period_season = models.CharField(max_length=1, choices=Subject.PERIOD_SEASON_CHOICES)
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
     days_allocated = models.PositiveIntegerField(default=0)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
     class Meta:
-        ordering = ("subject", "phase")
+        ordering = ("period_year", "period_season", "phase")
         constraints = [
-            models.UniqueConstraint(fields=("subject", "phase"), name="uniq_subject_phase_schedule"),
+            models.UniqueConstraint(
+                fields=("period_year", "period_season", "phase"),
+                name="uniq_period_phase_schedule",
+            ),
         ]
 
     def __str__(self):
-        return f"{self.subject.code} - {self.phase} ({self.days_allocated}d)"
+        return f"{self.period_season}-{self.period_year} - {self.phase}"
 
 class SubjectUnit(models.Model):  #ficha proyecto api unidades
     number = models.IntegerField()

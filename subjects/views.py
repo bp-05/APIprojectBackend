@@ -17,7 +17,7 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
-    SubjectPhaseSchedule,
+    PeriodPhaseSchedule,
 )
 ## ProblemStatement model imported by companies app where its views live
 from .serializers import (
@@ -32,9 +32,10 @@ from .serializers import (
     Api3AlternanceSerializer,
     ApiType2CompletionSerializer,
     ApiType3CompletionSerializer,
-    SubjectPhaseScheduleSerializer,
+    PeriodPhaseScheduleSerializer,
 )
-from .permissions import IsSubjectTeacherOrAdmin
+from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator
+from .utils import get_default_period_from_settings, normalize_season_token, parse_period_string
 
 
 def _director_scope_q(user, subject_field='subject'):
@@ -55,7 +56,7 @@ class SubjectViewSet(viewsets.ModelViewSet):
     queryset = Subject.objects.all().select_related('teacher', 'area', 'career')
     serializer_class = SubjectSerializer
     permission_classes = [permissions.IsAuthenticated, IsSubjectTeacherOrAdmin]
-    filterset_fields = ['code', 'section']
+    filterset_fields = ['code', 'section', 'period_year', 'period_season']
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -73,23 +74,50 @@ class SubjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path=r'by-code/(?P<code>[^/]+)/(?P<section>[^/]+)')
     def by_code(self, request, code=None, section=None):
-        qs = self.get_queryset()
-        try:
-            obj = qs.get(code=code, section=section)
-        except Subject.DoesNotExist:
+        qs = self.get_queryset().filter(code=code, section=section)
+        if not qs.exists():
+            return Response({'detail': 'Not found.'}, status=404)
+        period_param = request.query_params.get('period')
+        season = None
+        year = None
+        if period_param:
+            season, year = parse_period_string(period_param)
+            if not (season and year):
+                return Response({'detail': 'period debe tener formato O-2025.'}, status=400)
+        else:
+            period_season = request.query_params.get('period_season')
+            if period_season:
+                normalized = normalize_season_token(period_season)
+                if not normalized:
+                    return Response({'detail': 'period_season debe ser O o P.'}, status=400)
+                season = normalized
+            period_year = request.query_params.get('period_year')
+            if period_year:
+                try:
+                    year = int(period_year)
+                except ValueError:
+                    return Response({'detail': 'period_year debe ser numérico.'}, status=400)
+        default_season, default_year = get_default_period_from_settings()
+        season = season or default_season
+        year = year or default_year
+        obj = qs.filter(period_year=year, period_season=season).first()
+        if not obj:
             return Response({'detail': 'Not found.'}, status=404)
         serializer = self.get_serializer(obj)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path=r'code-sections')
     def code_sections(self, request):
-        qs = self.get_queryset().order_by('code', 'section')
+        qs = self.get_queryset().order_by('code', 'section', '-period_year', '-period_season')
         data = [
             {
                 'id': s.id,
                 'code': s.code,
                 'section': s.section,
                 'name': s.name,
+                'period_year': s.period_year,
+                'period_season': s.period_season,
+                'period': s.period_code,
             }
             for s in qs
         ]
@@ -265,23 +293,9 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
 ## ProblemStatementViewSet movido a companies.views
 
 
-class SubjectPhaseScheduleViewSet(viewsets.ModelViewSet):
-    queryset = SubjectPhaseSchedule.objects.all().select_related('subject')
-    serializer_class = SubjectPhaseScheduleSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['subject', 'phase']
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        user = self.request.user
-        if (
-            getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
-            or user.groups.filter(name__in=['vcm']).exists()
-        ):
-            return qs
-        director_scope = _director_scope_q(user)
-        if director_scope is not None:
-            return qs.filter(director_scope | Q(subject__teacher=user))
-        return qs.filter(subject__teacher=user)
+class PeriodPhaseScheduleViewSet(viewsets.ModelViewSet):
+    queryset = PeriodPhaseSchedule.objects.all().order_by('period_year', 'period_season', 'phase')
+    serializer_class = PeriodPhaseScheduleSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
+    filterset_fields = ['period_year', 'period_season', 'phase']
 

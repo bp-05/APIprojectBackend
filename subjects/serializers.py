@@ -13,7 +13,7 @@ from .models import (
     Api3Alternance,
     ApiType2Completion,
     ApiType3Completion,
-    SubjectPhaseSchedule,
+    PeriodPhaseSchedule,
 )
 """Serializers for subjects app.
 
@@ -26,18 +26,48 @@ class SubjectSerializer(serializers.ModelSerializer):
     area_name = serializers.CharField(source='area.name', read_only=True)
     career_name = serializers.CharField(source='career.name', read_only=True)
     semester_name = serializers.CharField(source='semester.name', read_only=True)
+    period_code = serializers.CharField(read_only=True)
+    phase_start_date = serializers.DateField(read_only=True)
+    phase_end_date = serializers.DateField(read_only=True)
+    process_start_date = serializers.DateField(read_only=True)
+    process_end_date = serializers.DateField(read_only=True)
 
     class Meta:
         model = Subject
-        fields = ['id', 'code', 'section', 'name', 'campus', 'shift', 'phase', 'hours', 'api_type', 'teacher', 'teacher_name', 'area', 'area_name', 'career', 'career_name', 'semester', 'semester_name']
+        fields = [
+            'id',
+            'code',
+            'section',
+            'name',
+            'campus',
+            'shift',
+            'period_year',
+            'period_season',
+            'period_code',
+            'phase',
+            'phase_start_date',
+            'phase_end_date',
+            'process_start_date',
+            'process_end_date',
+            'hours',
+            'api_type',
+            'teacher',
+            'teacher_name',
+            'area',
+            'area_name',
+            'career',
+            'career_name',
+            'semester',
+            'semester_name',
+        ]
         extra_kwargs = {
             'teacher': {'required': False, 'allow_null': True},
         }
         validators = [
             UniqueTogetherValidator(
                 queryset=Subject.objects.all(),
-                fields=['code', 'section'],
-                message='code y section deben ser únicos en conjunto'
+                fields=['code', 'section', 'period_year', 'period_season'],
+                message='code, section y periodo deben ser únicos en conjunto'
             )
         ]
 
@@ -200,11 +230,17 @@ class ApiType3CompletionSerializer(serializers.ModelSerializer):
 ## ProblemStatement serializers moved to companies.serializers
 
 
-class SubjectPhaseScheduleSerializer(serializers.ModelSerializer):
+class PeriodPhaseScheduleSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SubjectPhaseSchedule
+        model = PeriodPhaseSchedule
         fields = [
-            'id', 'subject', 'phase', 'days_allocated', 'start_date', 'end_date'
+            'id',
+            'period_year',
+            'period_season',
+            'phase',
+            'days_allocated',
+            'start_date',
+            'end_date',
         ]
 
     def validate(self, attrs):
