@@ -2,9 +2,13 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.db.models import Q
+from django.http import HttpResponse, StreamingHttpResponse
+from django.views.decorators.http import require_GET
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import (
     Subject,
     Area,
@@ -36,6 +40,53 @@ from .serializers import (
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator
 from .utils import get_current_period, normalize_season_token, parse_period_string
+from .events import subject_event_stream
+
+
+def _authenticate_stream_request(request):
+    """
+    Resolve the authenticated user for the SSE endpoint using session or JWT.
+    """
+    user = getattr(request, "user", None)
+    if user and user.is_authenticated:
+        return user
+    jwt_auth = JWTAuthentication()
+    auth_header = request.META.get("HTTP_AUTHORIZATION")
+    token_query = request.GET.get("token")
+    if not auth_header and token_query:
+        # Allow passing the JWT as a query param for EventSource compatibility
+        request.META["HTTP_AUTHORIZATION"] = f"Bearer {token_query}"
+    try:
+        authenticated = jwt_auth.authenticate(request)
+    except (InvalidToken, Exception):
+        authenticated = None
+    if authenticated is None:
+        return None
+    return authenticated[0]
+
+
+@require_GET
+def subject_stream(request):
+    user = _authenticate_stream_request(request)
+    if not user:
+        return HttpResponse(status=401)
+
+    def event_generator():
+        # Let the browser know how often to retry if the stream drops.
+        yield "retry: 10000\n\n"
+        with subject_event_stream() as listener:
+            for message in listener:
+                if message.get("type") != "message":
+                    continue
+                data = message.get("data")
+                if not data:
+                    continue
+                yield f"data: {data}\n\n"
+
+    response = StreamingHttpResponse(event_generator(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
 
 
 def _director_scope_q(user, subject_field='subject'):

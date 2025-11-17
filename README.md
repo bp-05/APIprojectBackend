@@ -64,6 +64,32 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Periodo: cada asignatura pertenece a un semestre (`period_season` O=Otoño, P=Primavera y `period_year`). La combinación `code+section+period` es única y está disponible en los endpoints como `period_code` (ej. `O-2025`). El periodo por defecto se almacena en la tabla `PeriodSetting` (visible en el panel de administración) y se inicializa con el valor definido en la variable de entorno `SUBJECT_DEFAULT_PERIOD` (por ejemplo `P-2025`). Las acciones `by-code` aceptan `?period=O-2025` (o `?period_year=&period_season=`) y, si no se envía, utilizan el periodo almacenado en esa tabla.
 - Fases: `Subject` expone campos de solo lectura `phase_start_date`, `phase_end_date`, `process_start_date` y `process_end_date` derivados de los registros de `period-phase-schedules`, para conocer rápidamente el rango de fechas referenciales del proceso vigente. El cambio manual de la fase por asignatura sigue disponible y no altera la configuración global.
 
+### Stream SSE de Subjects
+- Endpoint: `GET /api/subjects/stream/` devuelve un flujo `text/event-stream` que emite un JSON cada vez que se crea, actualiza o elimina una asignatura, o cuando finaliza el procesamiento de un descriptor ligado a esa asignatura (el payload incluye `event`, `subject_id`, `code`, `section`, `name`, `period_year`, `period_season`, `updated_at`).
+- Eventos posibles: `created`, `updated`, `deleted` y `descriptor_processed` (este último se emite cuando `DescriptorFile.processed_at` pasa de `null` a una fecha, ideal para refrescar fichas después de subir un descriptor).
+- Autenticación: envía `Authorization: Bearer <access>` como cualquier request REST o, si usas `EventSource`, agrega `?token=<access>` a la URL.
+- El backend publica eventos vía Redis (configurable con `SUBJECT_STREAM_REDIS_URL`, por defecto usa `CELERY_BROKER_URL`). Asegúrate de que `redis` sea accesible desde los procesos `web`/`worker`.
+- Los eventos no se filtran por usuario; aplica las mismas reglas de permisos en el frontend (por ejemplo, ignora los eventos cuya asignatura no puedas listar en `/api/subjects/`).
+- Ejemplo React:
+  ```ts
+  useEffect(() => {
+    const src = new EventSource(`/api/subjects/stream/?token=${accessToken}`);
+    src.onmessage = (evt) => {
+      const payload = JSON.parse(evt.data);
+      if (payload.event === "deleted") {
+        removeSubject(payload.subject_id);
+      } else {
+        upsertSubject(payload);
+      }
+    };
+    src.onerror = () => {
+      // Opcional: mostrar alerta o reconectar manualmente.
+    };
+    return () => src.close();
+  }, [accessToken]);
+  ```
+- Nginx/Gunicorn: el proxy debe tener `proxy_buffering off` y `proxy_read_timeout` alto para esta ruta. Con Gunicorn usa workers asíncronos (`gevent`) o threads suficientes para no bloquear otras peticiones.
+
 - Unidades de Asignatura
   - `GET/POST /api/subject-units/`, `GET/PUT/PATCH/DELETE /api/subject-units/{id}/`
 

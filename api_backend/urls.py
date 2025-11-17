@@ -38,6 +38,7 @@ from subjects.views import (
     ApiType2CompletionViewSet,
     ApiType3CompletionViewSet,
     PeriodPhaseScheduleViewSet,
+    subject_stream,
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
@@ -78,6 +79,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # API
+    path('api/subjects/stream/', subject_stream, name='subject-stream'),
     path('api/', include(router.urls)),
     path('api/', include('exports_app.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
