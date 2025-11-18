@@ -42,7 +42,12 @@ from subjects.views import (
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
 from descriptors.views import DescriptorViewSet
-from companies.views import CompanyViewSet, ProblemStatementViewSet, CompanyEngagementScopeViewSet
+from companies.views import (
+    CompanyViewSet,
+    ProblemStatementViewSet,
+    CompanyEngagementScopeViewSet,
+    CounterpartContactViewSet,
+)
 
 # Configure router
 router = DefaultRouter()
@@ -66,6 +71,7 @@ router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-c
 router.register(r'api3-completions', ApiType3CompletionViewSet, basename='api3-completion')
 router.register(r'engagement-scopes', CompanyEngagementScopeViewSet, basename='engagement-scope')
 router.register(r'problem-statements', ProblemStatementViewSet, basename='problem-statement')
+router.register(r'counterpart-contacts', CounterpartContactViewSet, basename='counterpart-contact')
 router.register(r'forms', FormInstanceViewSet, basename='forminstance')
 router.register(r'form-templates', FormTemplateViewSet, basename='formtemplate')
 router.register(r'descriptors', DescriptorViewSet, basename='descriptor')

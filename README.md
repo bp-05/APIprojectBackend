@@ -28,48 +28,40 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - API base: `http://localhost:8000/api/`
 
 ## Autenticación (JWT)
-- Obtener token: `POST /api/token/` con `{ "email": "<email>", "password": "<pass>" }`
-- Refrescar: `POST /api/token/refresh/` con `{ "refresh": "<token>" }`
-- Usar en header: `Authorization: Bearer <access>`
+- Usa el endpoint de autenticación (ver sección **Endpoints**) con `{ "email": "<email>", "password": "<pass>" }` para obtener un par `access/refresh`.
+- Refresca el token enviando `{ "refresh": "<token>" }` al endpoint de refresh descrito en la misma sección.
+- Incluye `Authorization: Bearer <access>` en cada request autenticada.
 
-## Endpoints (resumen)
-- Autenticación
-  - `POST /api/token/`, `POST /api/token/refresh/`
+## Endpoints
 
-- Usuarios
-  - `GET /api/users/me/`
-  - `POST /api/users/me/change-password/`
-  - `GET/POST/PUT/PATCH/DELETE /api/users/` (admin gestiona usuarios)
-  - `GET /api/users/teachers/` (ADMIN, DAC, grupo `vcm`): lista de docentes (rol `DOC`).
-  - `GET/POST/PUT/PATCH/DELETE /api/teachers/` (ADMIN, DAC): gestión segura de docentes (rol `DOC`). Se fuerza `role='DOC'` y se limitan campos a `email`, `first_name`, `last_name`, `is_active` y `password`.
-  - Campos `area` y `career` (FK opcionales a `subjects.Area`/`subjects.Career`) permiten asociar directores de carrera u otros roles a su unidad académica. Si no se envían, permanecen en `null`.
-  - El rol `DC` puede CRUDear asignaturas y tablas relacionadas (unidades, competencias, condiciones, etc.) del área/carrera asignada: si tiene solo `area`, accede a todas las asignaturas de esa área; si tiene solo `career`, se limita a esa carrera; si tiene ambos, se usa la carrera. Sin datos, solo puede gestionar asignaturas donde es `teacher`.
+### Autenticacion
+- `POST /api/token/` y `POST /api/token/refresh/` para emitir y refrescar tokens JWT.
 
-- Áreas y Semestres (solo lectura)
-  - `GET /api/areas/`, `GET /api/areas/{id}/`
-  - `GET /api/careers/`, `GET /api/careers/{id}/` (solo lectura)
-    - Filtros: `?area=<id>`
-    - Búsqueda: `?search=<nombre>`
-    - Orden: `?ordering=name` o `?ordering=-name` (también `area`/`area__name`)
-    - Incluye `area` y `area_name` en la respuesta
-  - `GET /api/subject-semesters/`, `GET /api/subject-semesters/{id}/`
+### Usuarios
+- `GET /api/users/me/`
+- `POST /api/users/me/change-password/`
+- `GET/POST/PUT/PATCH/DELETE /api/users/`
+- `GET /api/users/teachers/`
+- `GET/POST/PUT/PATCH/DELETE /api/teachers/`
+- Notas: los campos `area` y `career` permiten asociar directores a unidades academicas, y el rol `DC` hereda permisos sobre asignaturas/tablas vinculadas a su area/carrera.
 
-- Asignaturas
-  - `GET/POST /api/subjects/`, `GET/PUT/PATCH/DELETE /api/subjects/{id}/`
-  - Filtros: `GET /api/subjects/?code=<CODE>&section=<SECTION>`
-  - Detalle por código+sección: `GET /api/subjects/by-code/<CODE>/<SECTION>/`
-  - Autocompletado code+section: `GET /api/subjects/code-sections/`
-- Permisos: `ADMIN`, `DAC` y grupo `vcm` ven todo y pueden crear/editar/borrar; docentes sólo sus propias asignaturas.
-- Regla: el campo `teacher` sólo acepta usuarios con rol `DOC`.
-- Periodo: cada asignatura pertenece a un semestre (`period_season` O=Otoño, P=Primavera y `period_year`). La combinación `code+section+period` es única y está disponible en los endpoints como `period_code` (ej. `O-2025`). El periodo por defecto se almacena en la tabla `PeriodSetting` (visible en el panel de administración) y se inicializa con el valor definido en la variable de entorno `SUBJECT_DEFAULT_PERIOD` (por ejemplo `P-2025`). Las acciones `by-code` aceptan `?period=O-2025` (o `?period_year=&period_season=`) y, si no se envía, utilizan el periodo almacenado en esa tabla.
-- Fases: `Subject` expone campos de solo lectura `phase_start_date`, `phase_end_date`, `process_start_date` y `process_end_date` derivados de los registros de `period-phase-schedules`, para conocer rápidamente el rango de fechas referenciales del proceso vigente. El cambio manual de la fase por asignatura sigue disponible y no altera la configuración global.
+### Catalogos academicos
+- `GET /api/areas/`, `GET /api/areas/{id}/`
+- `GET /api/careers/`, `GET /api/careers/{id}/`
+- `GET /api/subject-semesters/`, `GET /api/subject-semesters/{id}/`
+- Soportan filtros (`?area=`), busqueda (`?search=`) y ordering (`?ordering=name` o `-name`).
+
+### Asignaturas
+- `GET/POST /api/subjects/`, `GET/PUT/PATCH/DELETE /api/subjects/{id}/`
+- `GET /api/subjects/?code=<CODE>&section=<SECTION>` para filtros rapidos.
+- `GET /api/subjects/by-code/<CODE>/<SECTION>/` (con `?period=` opcional) y `GET /api/subjects/code-sections/` para autocompletar.
+- Permisos: `ADMIN`, `DAC` y grupo `vcm` ven todo, mientras que docentes solo manipulan sus asignaturas. El campo `teacher` acepta unicamente usuarios con rol `DOC`.
+- Cada asignatura pertenece a un periodo (`period_season` + `period_year`); `PeriodSetting` define el periodo por defecto y expone `period_code`. Tambien expone campos derivados `phase_start_date`, `phase_end_date`, `process_start_date` y `process_end_date`.
 
 ### Stream SSE de Subjects
-- Endpoint: `GET /api/subjects/stream/` devuelve un flujo `text/event-stream` que emite un JSON cada vez que se crea, actualiza o elimina una asignatura, o cuando finaliza el procesamiento de un descriptor ligado a esa asignatura (el payload incluye `event`, `subject_id`, `code`, `section`, `name`, `period_year`, `period_season`, `updated_at`).
-- Eventos posibles: `created`, `updated`, `deleted` y `descriptor_processed` (este último se emite cuando `DescriptorFile.processed_at` pasa de `null` a una fecha, ideal para refrescar fichas después de subir un descriptor).
-- Autenticación: envía `Authorization: Bearer <access>` como cualquier request REST o, si usas `EventSource`, agrega `?token=<access>` a la URL.
-- El backend publica eventos vía Redis (configurable con `SUBJECT_STREAM_REDIS_URL`, por defecto usa `CELERY_BROKER_URL`). Asegúrate de que `redis` sea accesible desde los procesos `web`/`worker`.
-- Los eventos no se filtran por usuario; aplica las mismas reglas de permisos en el frontend (por ejemplo, ignora los eventos cuya asignatura no puedas listar en `/api/subjects/`).
+- `GET /api/subjects/stream/` entrega un flujo `text/event-stream` con eventos `created`, `updated`, `deleted` y `descriptor_processed`.
+- Autenticacion por header o query `?token=`.
+- Publica via Redis (`SUBJECT_STREAM_REDIS_URL` o `CELERY_BROKER_URL`). No se filtra por usuario; el frontend debe descartar eventos que no pueda listar.
 - Ejemplo React:
   ```ts
   useEffect(() => {
@@ -88,58 +80,39 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
     return () => src.close();
   }, [accessToken]);
   ```
-- Nginx/Gunicorn: el proxy debe tener `proxy_buffering off` y `proxy_read_timeout` alto para esta ruta. Con Gunicorn usa workers asíncronos (`gevent`) o threads suficientes para no bloquear otras peticiones.
+- Nginx/Gunicorn: usar `proxy_buffering off`, `proxy_read_timeout` alto y workers asincronos o threads suficientes.
 
-- Unidades de Asignatura
-  - `GET/POST /api/subject-units/`, `GET/PUT/PATCH/DELETE /api/subject-units/{id}/`
+### Recursos ligados a asignaturas
+- `GET/POST /api/subject-units/`, `GET/PUT/PATCH/DELETE /api/subject-units/{id}/`
+- `GET/POST /api/subject-competencies/`, `GET/PUT/PATCH/DELETE /api/subject-competencies/{id}/`
+- `GET/POST /api/boundary-conditions/`, `GET/PUT/PATCH/DELETE /api/boundary-conditions/{id}/`
+- `GET/POST /api/possible-counterparts/`, `GET/PUT/PATCH/DELETE /api/possible-counterparts/{id}/` (campo `interaction_type` es lista de codigos; `subject` es opcional).
+- `GET/POST /api/alternances/`, `GET/PUT/PATCH/DELETE /api/alternances/{id}/`
+- `GET/POST /api/api2-completions/`, `GET/PUT/PATCH/DELETE /api/api2-completions/{id}/`
+- `GET/POST /api/api3-completions/`, `GET/PUT/PATCH/DELETE /api/api3-completions/{id}/`
+- `GET/POST /api/period-phase-schedules/`, `GET/PUT/PATCH/DELETE /api/period-phase-schedules/{id}/` (ADMIN y COORD) para definir rangos globales de fases.
 
-- Competencias Técnicas
-  - `GET/POST /api/subject-competencies/`, `GET/PUT/PATCH/DELETE /api/subject-competencies/{id}/`
+### Companies
+- `GET/POST /api/companies/`, `GET/PUT/PATCH/DELETE /api/companies/{id}/`
+- `GET/POST /api/problem-statements/`, `GET/PUT/PATCH/DELETE /api/problem-statements/{id}/`
+- `GET/POST /api/counterpart-contacts/`, `GET/PUT/PATCH/DELETE /api/counterpart-contacts/{id}/` (contactos asociados a empresas)
+- `GET/POST /api/engagement-scopes/`, `GET/PUT/PATCH/DELETE /api/engagement-scopes/{id}/` (unicos por empresa+code+section)
+- Permisos: ADMIN/VCM/COORD/grupo `vcm` ven todo; docentes y directores quedan limitados a las empresas vinculadas a asignaturas donde son docentes o a su area/carrera.
 
-- Condiciones de Borde
-  - `GET/POST /api/boundary-conditions/`, `GET/PUT/PATCH/DELETE /api/boundary-conditions/{id}/`
+### Formularios
+- `GET/POST /api/forms/`, `GET/PUT/PATCH/DELETE /api/forms/{id}/`
+- `GET/POST /api/form-templates/`, `GET/PUT/PATCH/DELETE /api/form-templates/{id}/`
+- El recurso `forms` expone acciones personalizadas `submit` y `approve` (solo staff/VCM) y estados `draft|in_review|approved`.
 
-- Posibles contrapartes
-  - `GET/POST /api/possible-counterparts/`, `GET/PUT/PATCH/DELETE /api/possible-counterparts/{id}/`
-  - Campo `interaction_type` (multi-select): enviar/recibir como lista de códigos.
-    - Códigos válidos: `virtual`, `onsite_inacap`, `onsite_company`.
-    - Ejemplo (crear): `{ "sector": "Tecnología", ..., "interaction_type": ["virtual","onsite_inacap"], "subject": 12, "company": 5 }`
-    - Admin: el campo se edita con checkboxes y se puede filtrar por `interaction_types`.
-  - `subject` es opcional: puedes crear la contraparte y asignarla a una asignatura más adelante.
-
-- Alternancia API 3
-  - `GET/POST /api/alternances/`, `GET/PUT/PATCH/DELETE /api/alternances/{id}/`
-
-- Completar API Tipo 2
-  - `GET/POST /api/api2-completions/`, `GET/PUT/PATCH/DELETE /api/api2-completions/{id}/`
-
-- Completar API Tipo 3
-  - `GET/POST /api/api3-completions/`, `GET/PUT/PATCH/DELETE /api/api3-completions/{id}/`
-
-- Fases por Periodo
-  - `GET/POST /api/period-phase-schedules/`, `GET/PUT/PATCH/DELETE /api/period-phase-schedules/{id}/` (ADMIN y COORD).
-  - Define fechas de referencia por periodo y fase (5 fases del proceso). Todas las asignaturas del periodo las exponen como campos de solo lectura.
-  - Filtros disponibles: `?period_year=2025&period_season=O`.
-
-- Formularios y Descriptores
-  - `GET/POST /api/forms/`, `GET/PUT/PATCH/DELETE /api/forms/{id}/`
-  - `GET/POST /api/form-templates/`, `GET/PUT/PATCH/DELETE /api/form-templates/{id}/`
+### Descriptores
 - `GET/POST /api/descriptors/`, `GET/PUT/PATCH/DELETE /api/descriptors/{id}/`
-- Permisos: `ADMIN`, `DAC`, `COORD` y grupo `vcm` ven todo; docentes solo pueden ver/gestionar descriptores de sus propias asignaturas.
-  - Validación al subir descriptor asociado a una asignatura:
-    - Se extrae el código de asignatura desde el PDF y se compara con el de la asignatura enviada.
-    - Si no se puede extraer: 400 con `"no es posible extraer el codigo de asignatura del pdf"`.
-    - Si no coincide: 400 con `"el descriptor no corresponde a la asignatura"`.
-- Procesar descriptor: `POST /api/descriptors/{id}/process/`
-    - Si la asignatura ya existe y no tenía descriptor:
-      - Solo se sobrescriben los campos que realmente se extraen del PDF.
-      - `name`: se actualiza si el PDF trae nombre; si no, se conserva el actual.
-      - `hours`: se actualiza si se puede derivar desde la suma de `unit_hours` extraídas; si no, se conserva.
-      - `code` y `section`: no se cambian; se valida que el PDF corresponda.
-      - `area`, `semester`, `campus`, `api_type`: se conservan (no se reemplazan por valores por defecto del proceso).
+- `POST /api/descriptors/{id}/process/` para disparar el pipeline Celery.
+- Permisos: `ADMIN`, `DAC`, `COORD` y grupo `vcm` ven todo; docentes solo los de sus asignaturas. Se valida que el PDF corresponda al `Subject` antes de procesar.
 
-- Exportación a Excel
-  - Incluida via `exports_app.urls` bajo `/api/`
+### Exportacion a Excel
+- `POST /api/forms/<form_id>/export-xlsx/` genera el XLSX con la plantilla (`ficha-api` o `proyecto-api`). Requiere ser staff/VCM o docente dueño del form.
+
+## Datos iniciales (`scripts/populate.json`)
 
 ## Datos iniciales (`scripts/populate.json`)
 - Después de cada `migrate`, `users.signals.populate_after_migrate` lee `scripts/populate.json` (si existe) y hace _upsert_ de usuarios, empresas, asignaturas y problem statements.
@@ -164,8 +137,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 ## Gestión de Usuarios (detalle)
 
 - Crear usuario (solo ADMIN)
-  - `POST /api/users/`
-  - Body:
+  - Usa el endpoint de usuarios (ver sección **Usuarios** arriba) con `POST` y el siguiente cuerpo:
     - `email` (requerido)
     - `first_name`, `last_name`
     - `role` (`ADMIN`, `VCM`, `DAC`, `DC`, `DOC`, `COORD`)
@@ -175,17 +147,15 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
   - Respuesta: datos del usuario sin contraseña.
 
 - Actualizar usuario (solo ADMIN)
-  - `PUT/PATCH /api/users/{id}/`
-  - Body (cualquier campo admin): `email`, `first_name`, `last_name`, `role`, `is_active`, `is_staff`, `is_superuser`.
+  - Usa `PUT/PATCH` sobre el endpoint de usuarios para editar `email`, `first_name`, `last_name`, `role`, `is_active`, `is_staff`, `is_superuser`.
   - Cambio de contraseña opcional: incluir `password` y `password2` (deben coincidir). No se devuelve la contraseña.
 
 - Cambiar mi contraseña (usuario autenticado)
-  - `POST /api/users/me/change-password/`
-  - Body: `old_password`, `new_password`, `new_password2`.
+  - Usa la acción `change-password` del recurso `users/me` con `old_password`, `new_password`, `new_password2`.
 
 ## Procesamiento de Descriptores (IA)
 
-- Subida y disparo: `POST /api/descriptors/` y luego `POST /api/descriptors/{id}/process/` (asíncrono con Celery).
+- Subida y disparo: usa el recurso de descriptores (ver sección **Descriptores**) para crear el registro y luego invocar su acción `process` (asíncrona via Celery).
 - Pipeline (local, sin cloud):
   - Extracción local de texto con PyMuPDF (fitz). No se sube el PDF a ningún servicio externo.
   - Envío del texto completo al modelo local en Ollama (una sola llamada) para generar JSON con: subject (solo horas si aparecen), technical_competencies, company_boundary_condition, api_type_2_completion, api_type_3_completion, subject_units.

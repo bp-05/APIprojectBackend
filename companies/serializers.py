@@ -22,7 +22,10 @@ class CompanySerializer(serializers.ModelSerializer):
 class CounterpartContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = CounterpartContact
-        fields = ['id', 'name', 'rut', 'phone', 'email', 'counterpart_area', 'role']
+        fields = ['id', 'company', 'name', 'rut', 'phone', 'email', 'counterpart_area', 'role']
+        extra_kwargs = {
+            'company': {'required': False}
+        }
 
 
 def _default_contacts_list():
