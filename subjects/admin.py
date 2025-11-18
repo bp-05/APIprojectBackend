@@ -20,7 +20,7 @@ from .models import (
 
 @admin.register(Subject)
 class SubjectAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "code", "section", "period_code", "name", "campus", "shift", "phase", "hours", "api_type", "teacher", "area", "career", "semester")
+    list_display = ("id", "code", "section", "period_code", "name", "campus", "shift", "phase", "hours", "total_students", "api_type", "teacher", "area", "career", "semester")
     list_filter = ("period_year", "period_season", "api_type", "area", "career", "semester", "section", "shift", "phase")
     search_fields = ("code", "section", "name", "teacher__email", "teacher__first_name", "teacher__last_name")
     autocomplete_fields = ("teacher", "area", "career", "semester")

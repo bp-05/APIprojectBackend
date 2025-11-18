@@ -182,6 +182,7 @@ class Migration(migrations.Migration):
                     ('completado', 'Completado'),
                 ])),
                 ('hours', models.PositiveIntegerField(default=0)),
+                ('total_students', models.PositiveIntegerField(blank=True, null=True)),
                 ('api_type', models.PositiveSmallIntegerField(choices=((1, 'Type 1'), (2, 'Type 2'), (3, 'Type 3')), default=2)),
                 ('area', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.area')),
                 ('career', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='subjects', to='subjects.career')),

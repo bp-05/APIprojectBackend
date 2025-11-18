@@ -204,7 +204,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 Subjects
 - Subject
   - Depende: `users.User` (teacher, opcional), `subjects.Area`, `subjects.SemesterLevel`
-  - Unicidad: (`code`, `section`)
+  - Unicidad: (`code`, `section`, `period_year`, `period_season`)
+  - Campo opcional: `total_students` para registrar el n�mero estimado de estudiantes
 - Area
   - Obligatorio: `name`
 - SemesterLevel

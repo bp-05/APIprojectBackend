@@ -144,6 +144,7 @@ class Subject(models.Model):
     )
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES, default="inicio")
     hours = models.PositiveIntegerField(default=0)
+    total_students = models.PositiveIntegerField(null=True, blank=True)
     api_type = models.PositiveSmallIntegerField(
         default=2,
         choices=((1, "Type 1"), (2, "Type 2"), (3, "Type 3")),

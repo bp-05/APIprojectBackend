@@ -50,6 +50,7 @@ class SubjectSerializer(serializers.ModelSerializer):
             'process_start_date',
             'process_end_date',
             'hours',
+            'total_students',
             'api_type',
             'teacher',
             'teacher_name',
