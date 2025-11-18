@@ -85,33 +85,52 @@ class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
             'company',
             'subject_code',
             'subject_section',
+            'subject_period_season',
+            'subject_period_year',
         ]
         validators = [
             UniqueTogetherValidator(
                 queryset=CompanyEngagementScope.objects.all(),
-                fields=['company', 'subject_code', 'subject_section'],
-                message='Ya existe un alcance para esta empresa y asignatura'
+                fields=['company', 'subject_code', 'subject_section', 'subject_period_season', 'subject_period_year'],
+                message='Ya existe un alcance para esta empresa y asignatura en ese periodo'
             )
         ]
 
     def validate(self, attrs):
         subject_code = attrs.get('subject_code')
         subject_section = attrs.get('subject_section')
+        subject_period_season = attrs.get('subject_period_season')
+        subject_period_year = attrs.get('subject_period_year')
 
         # On update, fields might be omitted; fall back to instance values
         if self.instance is not None:
             if subject_code is None:
                 subject_code = getattr(self.instance, 'subject_code', None)
+                attrs['subject_code'] = subject_code
             if subject_section is None:
                 subject_section = getattr(self.instance, 'subject_section', None)
+                attrs['subject_section'] = subject_section
+            if subject_period_season is None:
+                subject_period_season = getattr(self.instance, 'subject_period_season', None)
+                attrs['subject_period_season'] = subject_period_season
+            if subject_period_year is None:
+                subject_period_year = getattr(self.instance, 'subject_period_year', None)
+                attrs['subject_period_year'] = subject_period_year
 
         # Ensure the referenced Subject exists
-        if subject_code is None or subject_section is None:
-            raise serializers.ValidationError({'subject_code': 'subject_code y subject_section son requeridos'})
+        if None in (subject_code, subject_section, subject_period_season, subject_period_year):
+            raise serializers.ValidationError(
+                {'subject_code': 'subject_code, subject_section, subject_period_season y subject_period_year son requeridos'}
+            )
 
-        exists = Subject.objects.filter(code=subject_code, section=subject_section).exists()
+        exists = Subject.objects.filter(
+            code=subject_code,
+            section=subject_section,
+            period_season=subject_period_season,
+            period_year=subject_period_year,
+        ).exists()
         if not exists:
-            raise serializers.ValidationError({'subject_code': 'No existe Subject con ese code y section'})
+            raise serializers.ValidationError({'subject_code': 'No existe Subject con esa combinacion de code, section y periodo'})
 
         return super().validate(attrs)
 

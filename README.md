@@ -96,7 +96,7 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - `GET/POST /api/companies/`, `GET/PUT/PATCH/DELETE /api/companies/{id}/`
 - `GET/POST /api/problem-statements/`, `GET/PUT/PATCH/DELETE /api/problem-statements/{id}/`
 - `GET/POST /api/counterpart-contacts/`, `GET/PUT/PATCH/DELETE /api/counterpart-contacts/{id}/` (contactos asociados a empresas)
-- `GET/POST /api/engagement-scopes/`, `GET/PUT/PATCH/DELETE /api/engagement-scopes/{id}/` (unicos por empresa+code+section)
+- `GET/POST /api/engagement-scopes/`, `GET/PUT/PATCH/DELETE /api/engagement-scopes/{id}/` (unicos por empresa+code+section+periodo)
 - Permisos: ADMIN/VCM/COORD/grupo `vcm` ven todo; docentes y directores quedan limitados a las empresas vinculadas a asignaturas donde son docentes o a su area/carrera.
 
 ### Formularios
@@ -237,7 +237,8 @@ Companies
   - Campos: `name`, `rut` (texto <= 50), `phone`, `email`, `counterpart_area`, `role`
 - CompanyEngagementScope
   - Depende: `companies.Company`
-  - Reglas: único por (`company`, `subject_code`, `subject_section`)
+  - Campos: `subject_code`, `subject_section`, `subject_period_season`, `subject_period_year` (representan la asignatura sin FK)
+  - Reglas: único por (`company`, `subject_code`, `subject_section`, `subject_period_season`, `subject_period_year`)
 
 
 

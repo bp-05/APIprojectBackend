@@ -46,7 +46,7 @@ def _director_subject_queryset(user):
 
 def _subject_pairs_for_director(user):
     qs = _director_subject_queryset(user)
-    return list(qs.values_list('code', 'section'))
+    return list(qs.values_list('code', 'section', 'period_year', 'period_season'))
 
 
 def _accessible_company_ids(user):
@@ -91,7 +91,7 @@ class CompanyEngagementScopeViewSet(viewsets.ModelViewSet):
     queryset = CompanyEngagementScope.objects.all().select_related('company')
     serializer_class = CompanyEngagementScopeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['company', 'subject_code', 'subject_section']
+    filterset_fields = ['company', 'subject_code', 'subject_section', 'subject_period_season', 'subject_period_year']
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -100,11 +100,21 @@ class CompanyEngagementScopeViewSet(viewsets.ModelViewSet):
             return qs
         # Limitar por asignaturas del docente y directores sin FK: construir OR por code+section
         cond = Q(pk__isnull=True)
-        teacher_pairs = Subject.objects.filter(teacher=user).values_list('code', 'section')
-        for code, section in teacher_pairs:
-            cond |= Q(subject_code=code, subject_section=section)
-        for code, section in _subject_pairs_for_director(user):
-            cond |= Q(subject_code=code, subject_section=section)
+        teacher_pairs = Subject.objects.filter(teacher=user).values_list('code', 'section', 'period_year', 'period_season')
+        for code, section, period_year, period_season in teacher_pairs:
+            cond |= Q(
+                subject_code=code,
+                subject_section=section,
+                subject_period_year=period_year,
+                subject_period_season=period_season,
+            )
+        for code, section, period_year, period_season in _subject_pairs_for_director(user):
+            cond |= Q(
+                subject_code=code,
+                subject_section=section,
+                subject_period_year=period_year,
+                subject_period_season=period_season,
+            )
         return qs.filter(cond)
 
 

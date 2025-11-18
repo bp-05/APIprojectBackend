@@ -50,12 +50,14 @@ class Migration(migrations.Migration):
                 ('meeting_schedule_availability', models.TextField(blank=True, default='')),
                 ('subject_code', models.CharField(max_length=20)),
                 ('subject_section', models.CharField(default='1', max_length=10)),
+                ('subject_period_season', models.CharField(choices=[('O', 'Otono'), ('P', 'Primavera')], max_length=1)),
+                ('subject_period_year', models.PositiveIntegerField()),
                 ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='engagement_scopes', to='companies.company')),
             ],
-            options={'ordering': ('company', 'subject_code', 'subject_section')},
+            options={'ordering': ('company', 'subject_period_year', 'subject_period_season', 'subject_code', 'subject_section')},
         ),
         migrations.AddConstraint(
             model_name='companyengagementscope',
-            constraint=models.UniqueConstraint(fields=('company', 'subject_code', 'subject_section'), name='uniq_company_engagement_company_subject'),
+            constraint=models.UniqueConstraint(fields=('company', 'subject_code', 'subject_section', 'subject_period_season', 'subject_period_year'), name='uniq_company_engagement_company_subject'),
         ),
     ]
