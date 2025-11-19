@@ -38,7 +38,7 @@ from .serializers import (
     ApiType3CompletionSerializer,
     PeriodPhaseScheduleSerializer,
 )
-from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator
+from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator, IsAdminOrAcademicDept
 from .utils import get_current_period, normalize_season_token, parse_period_string
 from .events import subject_event_stream
 
@@ -175,16 +175,16 @@ class SubjectViewSet(viewsets.ModelViewSet):
         return Response(data)
 
 
-class AreaViewSet(viewsets.ReadOnlyModelViewSet):
+class AreaViewSet(viewsets.ModelViewSet):
     queryset = Area.objects.all().order_by('name')
     serializer_class = AreaSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrAcademicDept]
 
 
-class CareerViewSet(viewsets.ReadOnlyModelViewSet):
+class CareerViewSet(viewsets.ModelViewSet):
     queryset = Career.objects.all().select_related('area').order_by('name')
     serializer_class = CareerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminOrAcademicDept]
     filterset_fields = ['area']
     search_fields = ['name']
     ordering_fields = ['name', 'area', 'area__name']

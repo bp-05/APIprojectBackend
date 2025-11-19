@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 class IsSubjectTeacherOrAdmin(BasePermission):
@@ -32,3 +32,20 @@ class IsAdminOrCoordinator(BasePermission):
         if getattr(user, 'is_staff', False):
             return True
         return getattr(user, 'role', None) in {'ADMIN', 'COORD'}
+
+
+class IsAdminOrAcademicDept(BasePermission):
+    """
+    CRUD solo para admin (o staff) y rol Departamento Académico (DAC);
+    acceso de lectura para cualquier usuario autenticado.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        if getattr(user, 'is_staff', False):
+            return True
+        return getattr(user, 'role', None) in {'ADMIN', 'DAC'}

@@ -46,10 +46,11 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - Notas: los campos `area` y `career` permiten asociar directores a unidades academicas, y el rol `DC` hereda permisos sobre asignaturas/tablas vinculadas a su area/carrera.
 
 ### Catalogos academicos
-- `GET /api/areas/`, `GET /api/areas/{id}/`
-- `GET /api/careers/`, `GET /api/careers/{id}/`
+- `GET/POST/PUT/PATCH/DELETE /api/areas/`, `GET/PUT/PATCH/DELETE /api/areas/{id}/`
+- `GET/POST/PUT/PATCH/DELETE /api/careers/`, `GET/PUT/PATCH/DELETE /api/careers/{id}/`
 - `GET /api/subject-semesters/`, `GET /api/subject-semesters/{id}/`
 - Soportan filtros (`?area=`), busqueda (`?search=`) y ordering (`?ordering=name` o `-name`).
+- Permisos: lectura para usuarios autenticados; escritura solo `ADMIN`, rol `DAC` o staff.
 
 ### Asignaturas
 - `GET/POST /api/subjects/`, `GET/PUT/PATCH/DELETE /api/subjects/{id}/`
