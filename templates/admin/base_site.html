@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ site_title|default:_("Django site admin") }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.req-star {
+    color: #ba2121;
+    font-weight: 600;
+    margin-left: 2px;
+}
+</style>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script>
+// Add asterisk to labels of required fields, covering classic admin markup
+document.addEventListener('DOMContentLoaded', function () {
+    const rowLabels = document.querySelectorAll('.form-row.required label, .form-row .required label');
+    const tableLabels = document.querySelectorAll('td.required label, th.required label');
+    const controlLabels = Array.from(document.querySelectorAll('form input[required], form select[required], form textarea[required]'))
+        .map(field => document.querySelector(`label[for="${field.id}"]`))
+        .filter(Boolean);
+    const allLabels = [...rowLabels, ...tableLabels, ...controlLabels];
+    allLabels.forEach(function (label) {
+        if (!label || label.dataset.reqMark === '1') return;
+        const star = document.createElement('span');
+        star.className = 'req-star';
+        star.textContent = ' *';
+        label.appendChild(star);
+        label.dataset.reqMark = '1';
+    });
+});
+</script>
+{% endblock %}

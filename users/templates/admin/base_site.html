@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ site_title|default:_("Django site admin") }}{% endblock %}
+
+{% block extrahead %}{{ block.super }}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* Add asterisk to required fields across admin (change/add, inlines, tabular) */
+.req-star {
+    color: #ba2121;
+    font-weight: 600;
+    margin-left: 2px;
+}
+</style>
+{% endblock %}
+
+{% block extrahead %}{{ block.super }}{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script>
+// Add asterisk to labels of required fields, covering classic admin markup
+document.addEventListener('DOMContentLoaded', function () {
+    // Standard admin: required row has class .form-row.required
+    const rowLabels = document.querySelectorAll('.form-row.required label, .form-row .required label');
+    // Tabular inlines mark cells with .required
+    const tableLabels = document.querySelectorAll('td.required label, th.required label');
+    // HTML5 required attributes (fallback)
+    const controlLabels = Array.from(document.querySelectorAll('form input[required], form select[required], form textarea[required]'))
+        .map(field => document.querySelector(`label[for="${field.id}"]`))
+        .filter(Boolean);
+
+    const allLabels = [...rowLabels, ...tableLabels, ...controlLabels];
+
+    allLabels.forEach(function (label) {
+        if (!label || label.dataset.reqMark === '1') return;
+        const star = document.createElement('span');
+        star.className = 'req-star';
+        star.textContent = ' *';
+        label.appendChild(star);
+        label.dataset.reqMark = '1';
+    });
+});
+</script>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:_("Django administration") }}</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
