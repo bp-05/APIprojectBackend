@@ -1,6 +1,11 @@
+"""
+URLs para la app de exportaciones.
+"""
 from django.urls import path
-from .views import export_forminstance
+from .views import export_ficha_api_view
+
+app_name = 'exports'
 
 urlpatterns = [
-    path('forms/<int:form_id>/export-xlsx/', export_forminstance, name='export_form_xlsx'),
+    path('exports/subjects/<int:subject_id>/ficha-api/', export_ficha_api_view, name='export_ficha_api'),
 ]
