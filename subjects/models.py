@@ -70,7 +70,7 @@ class PossibleCounterpart(models.Model): # seccion 3 ficha api empresas/instituc
     interaction_types = models.ManyToManyField('subjects.InteractionType', related_name='possible_counterparts', blank=True)
     has_guide = models.BooleanField(default=False)
     can_receive_alternance = models.BooleanField(default=False)
-    alternance_students_quota = models.PositiveIntegerField(default=0)
+    alternance_students_quota = models.PositiveIntegerField(null=True, blank=True)
     subject = models.ForeignKey(
         'subjects.Subject',
         on_delete=models.CASCADE,
