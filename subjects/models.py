@@ -83,7 +83,11 @@ class PossibleCounterpart(models.Model): # seccion 3 ficha api empresas/instituc
     class Meta:
         ordering = ("subject", "company")
         constraints = [
-            models.UniqueConstraint(fields=("subject", "company"), name="uniq_possible_counterpart_subject_company"),
+            models.UniqueConstraint(
+                fields=("subject", "company"), 
+                name="uniq_possible_counterpart_subject_company",
+                condition=models.Q(subject__isnull=False)
+            ),
         ]
 
     def __str__(self):
