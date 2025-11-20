@@ -204,8 +204,8 @@ class FichaAPIDataCollector:
         
         for idx, ps in enumerate(problem_statements, start=1):
             company = ps.company
-            # Obtener el primer contacto de contraparte
-            contact = ps.counterpart_contacts.first()
+            # Obtener el primer contacto de contraparte (a través de la company)
+            contact = company.counterpart_contacts.first() if company else None
             
             data.update({
                 f'Company_name_col_{idx}': company.name,
@@ -398,16 +398,18 @@ class ProyectoAPIDataCollector:
         data = {}
         
         # Obtener contactos de contrapartes desde problem_statements
-        problem_statements = self.subject.problem_statements.prefetch_related('counterpart_contacts')
+        # Los counterpart_contacts están asociados a la company, no directamente al problem_statement
+        problem_statements = self.subject.problem_statements.all()
         contacts = []
         
         for ps in problem_statements:
-            for contact in ps.counterpart_contacts.all():
-                contacts.append({
-                    'name': contact.name,
-                    'area': contact.counterpart_area,
-                    'role': contact.role,
-                })
+            if ps.company:
+                for contact in ps.company.counterpart_contacts.all():
+                    contacts.append({
+                        'name': contact.name,
+                        'area': contact.counterpart_area,
+                        'role': contact.role,
+                    })
         
         # Limitar a 4
         contacts = contacts[:4]
@@ -466,8 +468,8 @@ class ProyectoAPIDataCollector:
         # Obtener el primer contacto de contraparte (para todas las filas)
         first_contact = None
         first_ps = self.subject.problem_statements.first()
-        if first_ps:
-            first_contact = first_ps.counterpart_contacts.first()
+        if first_ps and first_ps.company:
+            first_contact = first_ps.company.counterpart_contacts.first()
         
         # Llenar hasta 4 filas
         for idx in range(1, 5):
