@@ -96,6 +96,8 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 ### Companies
 - `GET/POST /api/companies/`, `GET/PUT/PATCH/DELETE /api/companies/{id}/`
 - `GET/POST /api/problem-statements/`, `GET/PUT/PATCH/DELETE /api/problem-statements/{id}/`
+  - Soporta filtros: `?subject=<id>` y `?company=<id>` para obtener problem statements específicos
+  - Ejemplo: `GET /api/problem-statements/?subject=5` devuelve solo los proyectos de la asignatura con id=5
 - `GET/POST /api/counterpart-contacts/`, `GET/PUT/PATCH/DELETE /api/counterpart-contacts/{id}/` (contactos asociados a empresas)
 - `GET/POST /api/engagement-scopes/`, `GET/PUT/PATCH/DELETE /api/engagement-scopes/{id}/` (unicos por empresa+code+section+periodo)
 - Permisos: ADMIN/VCM/COORD/grupo `vcm` ven todo; docentes y directores quedan limitados a las empresas vinculadas a asignaturas donde son docentes o a su area/carrera.

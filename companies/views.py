@@ -75,6 +75,7 @@ class ProblemStatementViewSet(viewsets.ModelViewSet):
     queryset = ProblemStatement.objects.all().select_related('subject', 'company')
     serializer_class = ProblemStatementSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['subject', 'company']
 
     def get_queryset(self):
         qs = super().get_queryset()
