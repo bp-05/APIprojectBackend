@@ -127,12 +127,13 @@ def get_mapping_path(template_key: str) -> str:
     return str(base / mappings[template_key])
 
 
-def export_proyecto_api(subject) -> HttpResponse:
+def export_proyecto_api(subject, problem_statement) -> HttpResponse:
     """
-    Exporta una Ficha Proyecto API completa para una asignatura.
+    Exporta una Ficha Proyecto API completa para un proyecto específico de una asignatura.
     
     Args:
         subject: Objeto Subject con todos sus datos relacionados
+        problem_statement: Objeto ProblemStatement específico a exportar
         
     Returns:
         HttpResponse con el archivo Excel
@@ -149,7 +150,7 @@ def export_proyecto_api(subject) -> HttpResponse:
     ws = wb.active
     
     # 3. Recolectar datos de la base de datos
-    collector = ProyectoAPIDataCollector(subject)
+    collector = ProyectoAPIDataCollector(subject, problem_statement)
     data = collector.collect_all()
     
     # 4. Cargar mapeo JSON
@@ -165,7 +166,9 @@ def export_proyecto_api(subject) -> HttpResponse:
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    filename = f"Proyecto_API_{subject.code}_{subject.period_season}{subject.period_year}.xlsx"
+    # Incluir información de la empresa en el nombre del archivo
+    company_name = problem_statement.company.name.replace(' ', '_').replace('/', '_')[:30]
+    filename = f"Proyecto_API_{subject.code}_{subject.section}_{company_name}.xlsx"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
     # 7. Agregar información sobre datos faltantes en headers

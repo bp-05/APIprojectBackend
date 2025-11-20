@@ -70,11 +70,11 @@ def export_ficha_api_view(request, subject_id: int):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def export_proyecto_api_view(request, subject_id: int):
+def export_proyecto_api_view(request, subject_id: int, problem_statement_id: int):
     """
-    Exporta la Ficha Proyecto API de una asignatura en formato Excel.
+    Exporta la Ficha Proyecto API de un proyecto específico de una asignatura en formato Excel.
     
-    GET /api/exports/subjects/<subject_id>/proyecto-api/
+    GET /api/exports/subjects/<subject_id>/proyecto-api/<problem_statement_id>/
     
     Permisos:
     - El docente de la asignatura
@@ -95,6 +95,16 @@ def export_proyecto_api_view(request, subject_id: int):
         id=subject_id
     )
     
+    # Obtener el problem_statement específico
+    from companies.models import ProblemStatement
+    problem_statement = get_object_or_404(
+        ProblemStatement.objects.select_related('company').prefetch_related(
+            'company__counterpart_contacts'
+        ),
+        id=problem_statement_id,
+        subject_id=subject_id
+    )
+    
     # Verificar permisos
     user = request.user
     is_teacher = subject.teacher and subject.teacher.id == user.id
@@ -109,7 +119,7 @@ def export_proyecto_api_view(request, subject_id: int):
     
     # Generar y retornar el archivo Excel
     try:
-        response = export_proyecto_api(subject)
+        response = export_proyecto_api(subject, problem_statement)
         return response
     except Exception as e:
         return Response(

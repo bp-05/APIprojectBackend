@@ -8,5 +8,5 @@ app_name = 'exports'
 
 urlpatterns = [
     path('exports/subjects/<int:subject_id>/ficha-api/', export_ficha_api_view, name='export_ficha_api'),
-    path('exports/subjects/<int:subject_id>/proyecto-api/', export_proyecto_api_view, name='export_proyecto_api'),
+    path('exports/subjects/<int:subject_id>/proyecto-api/<int:problem_statement_id>/', export_proyecto_api_view, name='export_proyecto_api'),
 ]

@@ -306,7 +306,7 @@ class FichaAPIDataCollector:
 
 class ProyectoAPIDataCollector:
     """
-    Recolecta datos de una asignatura y sus modelos relacionados
+    Recolecta datos de una asignatura y un proyecto específico (ProblemStatement)
     para exportar a la plantilla Proyecto API (Ficha Proyecto API).
     
     MANEJO DE DATOS FALTANTES:
@@ -315,8 +315,9 @@ class ProyectoAPIDataCollector:
     - El sistema SIEMPRE genera un Excel válido, incluso con información parcial
     """
     
-    def __init__(self, subject):
+    def __init__(self, subject, problem_statement):
         self.subject = subject
+        self.problem_statement = problem_statement
         self.missing_data = []
     
     def collect_all(self) -> Dict[str, Any]:
@@ -393,23 +394,21 @@ class ProyectoAPIDataCollector:
     def _collect_participants(self) -> Dict[str, Any]:
         """
         Recolecta participantes (contrapartes y/o docentes) - hasta 4 filas.
-        Obtiene los contactos de las problemáticas asociadas.
+        Obtiene los contactos del problema específico (problem_statement).
         """
         data = {}
         
-        # Obtener contactos de contrapartes desde problem_statements
-        # Los counterpart_contacts están asociados a la company, no directamente al problem_statement
-        problem_statements = self.subject.problem_statements.all()
+        # Obtener contactos de contrapartes desde el problem_statement específico
+        # Los counterpart_contacts están asociados a la company
         contacts = []
         
-        for ps in problem_statements:
-            if ps.company:
-                for contact in ps.company.counterpart_contacts.all():
-                    contacts.append({
-                        'name': contact.name,
-                        'area': contact.counterpart_area,
-                        'role': contact.role,
-                    })
+        if self.problem_statement.company:
+            for contact in self.problem_statement.company.counterpart_contacts.all():
+                contacts.append({
+                    'name': contact.name,
+                    'area': contact.counterpart_area,
+                    'role': contact.role,
+                })
         
         # Limitar a 4
         contacts = contacts[:4]
@@ -432,29 +431,14 @@ class ProyectoAPIDataCollector:
         return data
     
     def _collect_problem_statement(self) -> Dict[str, Any]:
-        """Recolecta la primera problemática asociada."""
-        default_data = {
-            'ProblemStatement_problem_to_address': '',
-            'ProblemStatement_why_important': '',
-            'ProblemStatement_stakeholders': '',
-            'ProblemStatement_related_area': '',
-            'ProblemStatement_benefits_short_medium_long_term': '',
-            'ProblemStatement_problem_definition': '',
-        }
-        
-        ps = self.subject.problem_statements.first()
-        
-        if not ps:
-            self.missing_data.append('No hay problemática definida')
-            return default_data
-        
+        """Recolecta la problemática específica (problem_statement)."""
         return {
-            'ProblemStatement_problem_to_address': ps.problem_to_address or '',
-            'ProblemStatement_why_important': ps.why_important or '',
-            'ProblemStatement_stakeholders': ps.stakeholders or '',
-            'ProblemStatement_related_area': ps.related_area or '',
-            'ProblemStatement_benefits_short_medium_long_term': ps.benefits_short_medium_long_term or '',
-            'ProblemStatement_problem_definition': ps.problem_definition or '',
+            'ProblemStatement_problem_to_address': self.problem_statement.problem_to_address or '',
+            'ProblemStatement_why_important': self.problem_statement.why_important or '',
+            'ProblemStatement_stakeholders': self.problem_statement.stakeholders or '',
+            'ProblemStatement_related_area': self.problem_statement.related_area or '',
+            'ProblemStatement_benefits_short_medium_long_term': self.problem_statement.benefits_short_medium_long_term or '',
+            'ProblemStatement_problem_definition': self.problem_statement.problem_definition or '',
         }
     
     def _collect_subject_units(self) -> Dict[str, Any]:
@@ -465,11 +449,10 @@ class ProyectoAPIDataCollector:
         if len(units) < 4:
             self.missing_data.append(f'Solo {len(units)} de 4 unidades definidas')
         
-        # Obtener el primer contacto de contraparte (para todas las filas)
+        # Obtener el primer contacto de contraparte del problem_statement específico
         first_contact = None
-        first_ps = self.subject.problem_statements.first()
-        if first_ps and first_ps.company:
-            first_contact = first_ps.company.counterpart_contacts.first()
+        if self.problem_statement.company:
+            first_contact = self.problem_statement.company.counterpart_contacts.first()
         
         # Llenar hasta 4 filas
         for idx in range(1, 5):
