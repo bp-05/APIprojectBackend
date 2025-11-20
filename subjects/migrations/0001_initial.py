@@ -289,7 +289,7 @@ class Migration(migrations.Migration):
                 ('willing_design_project', models.BooleanField(default=False)),
                 ('has_guide', models.BooleanField(default=False)),
                 ('can_receive_alternance', models.BooleanField(default=False)),
-                ('alternance_students_quota', models.PositiveIntegerField(default=0)),
+                ('alternance_students_quota', models.PositiveIntegerField(blank=True, null=True)),
                 ('subject', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='possible_counterparts', to='subjects.subject')),
                 ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='possible_counterparts', to='companies.company')),
             ],
@@ -297,7 +297,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='possiblecounterpart',
-            constraint=models.UniqueConstraint(fields=('subject', 'company'), name='uniq_possible_counterpart_subject_company'),
+            constraint=models.UniqueConstraint(
+                fields=('subject', 'company'),
+                name='uniq_possible_counterpart_subject_company',
+                condition=models.Q(subject__isnull=False)
+            ),
         ),
         migrations.AddField(
             model_name='possiblecounterpart',
