@@ -7,7 +7,7 @@ import json
 from django.http import HttpResponse
 from pathlib import Path
 from typing import Dict, Any
-from .data_collectors import FichaAPIDataCollector
+from .data_collectors import FichaAPIDataCollector, ProyectoAPIDataCollector
 
 
 def _normalize_coord(coord: str) -> str:
@@ -125,3 +125,57 @@ def get_mapping_path(template_key: str) -> str:
     if template_key not in mappings:
         raise ValueError(f"Mapping '{template_key}' no encontrado")
     return str(base / mappings[template_key])
+
+
+def export_proyecto_api(subject) -> HttpResponse:
+    """
+    Exporta una Ficha Proyecto API completa para una asignatura.
+    
+    Args:
+        subject: Objeto Subject con todos sus datos relacionados
+        
+    Returns:
+        HttpResponse con el archivo Excel
+        
+    NOTA: Este sistema SIEMPRE genera un Excel válido, incluso si faltan datos.
+    Los campos faltantes se rellenan con cadenas vacías.
+    """
+    # 1. Obtener ruta de plantilla y mapeo
+    template_path = get_template_path('proyecto-api')
+    mapping_path = get_mapping_path('proyecto-api')
+    
+    # 2. Cargar plantilla Excel
+    wb = load_workbook(filename=template_path)
+    ws = wb.active
+    
+    # 3. Recolectar datos de la base de datos
+    collector = ProyectoAPIDataCollector(subject)
+    data = collector.collect_all()
+    
+    # 4. Cargar mapeo JSON
+    with open(mapping_path, 'r', encoding='utf-8') as f:
+        cell_mapping = json.load(f)
+    
+    # 5. Llenar celdas según el mapeo
+    for field_key, cell_coord in cell_mapping.items():
+        value = data.get(field_key, '')
+        _set_value_safe(ws, cell_coord, value)
+    
+    # 6. Preparar respuesta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f"Proyecto_API_{subject.code}_{subject.period_season}{subject.period_year}.xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    
+    # 7. Agregar información sobre datos faltantes en headers
+    missing_data = collector.get_missing_data_report()
+    if missing_data:
+        response['X-Export-Status'] = 'partial'
+        response['X-Missing-Data-Count'] = str(len(missing_data))
+    else:
+        response['X-Export-Status'] = 'complete'
+    
+    # 8. Guardar y retornar
+    wb.save(response)
+    return response
