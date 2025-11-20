@@ -239,7 +239,6 @@ class PeriodPhaseScheduleSerializer(serializers.ModelSerializer):
             'period_year',
             'period_season',
             'phase',
-            'days_allocated',
             'start_date',
             'end_date',
         ]

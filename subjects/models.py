@@ -227,7 +227,6 @@ class PeriodPhaseSchedule(models.Model):
     period_year = models.PositiveIntegerField()
     period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES)
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
-    days_allocated = models.PositiveIntegerField(default=0)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 

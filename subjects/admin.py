@@ -126,7 +126,7 @@ class ApiType3CompletionAdmin(admin.ModelAdmin):
 
 @admin.register(PeriodPhaseSchedule)
 class PeriodPhaseScheduleAdmin(admin.ModelAdmin):
-    list_display = ("id", "period_season", "period_year", "phase", "days_allocated", "start_date", "end_date")
+    list_display = ("id", "period_season", "period_year", "phase", "start_date", "end_date")
     list_filter = ("period_year", "period_season", "phase")
     search_fields = ("period_year", "phase")
     ordering = ("period_year", "period_season", "phase")

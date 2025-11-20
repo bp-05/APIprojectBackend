@@ -197,7 +197,6 @@ class Migration(migrations.Migration):
                 ('period_year', models.PositiveIntegerField()),
                 ('period_season', models.CharField(choices=[('O', 'Otoño'), ('P', 'Primavera')], max_length=1)),
                 ('phase', models.CharField(choices=[('inicio', 'Inicio'), ('formulacion', 'Formulación de requerimientos'), ('gestion', 'Gestión de requerimientos'), ('validacion', 'Validación de requerimientos'), ('completado', 'Completado')], max_length=20)),
-                ('days_allocated', models.PositiveIntegerField(default=0)),
                 ('start_date', models.DateField(blank=True, null=True)),
                 ('end_date', models.DateField(blank=True, null=True)),
             ],
