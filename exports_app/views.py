@@ -34,7 +34,7 @@ def export_ficha_api_view(request, subject_id: int):
             'possible_counterparts__company',
             'possible_counterparts__interaction_types',
             'problem_statements__company',
-            'problem_statements__counterpart_contacts',
+            'problem_statements__company__counterpart_contacts',
             'units',
         ),
         id=subject_id
@@ -44,7 +44,7 @@ def export_ficha_api_view(request, subject_id: int):
     user = request.user
     is_teacher = subject.teacher and subject.teacher.id == user.id
     is_admin = user.is_staff or user.is_superuser
-    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador']
+    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador', 'DC', 'DAC']
     
     if not (is_teacher or is_admin or is_vcm):
         return Response(
@@ -88,7 +88,8 @@ def export_proyecto_api_view(request, subject_id: int):
         Subject.objects.select_related(
             'area', 'career', 'semester', 'teacher'
         ).prefetch_related(
-            'problem_statements__counterpart_contacts',
+            'problem_statements__company',
+            'problem_statements__company__counterpart_contacts',
             'units',
         ),
         id=subject_id
@@ -98,7 +99,7 @@ def export_proyecto_api_view(request, subject_id: int):
     user = request.user
     is_teacher = subject.teacher and subject.teacher.id == user.id
     is_admin = user.is_staff or user.is_superuser
-    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador']
+    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador', 'DC', 'DAC']
     
     if not (is_teacher or is_admin or is_vcm):
         return Response(
