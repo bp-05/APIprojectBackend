@@ -28,10 +28,6 @@ class CounterpartContactSerializer(serializers.ModelSerializer):
         }
 
 
-def _default_contacts_list():
-    return [{"name": "", "rut": "", "phone": "", "email": "", "counterpart_area": "", "role": ""}]
-
-
 class ProblemStatementSerializer(serializers.ModelSerializer):
     counterpart_contacts = CounterpartContactSerializer(many=True, required=False)
 
@@ -54,10 +50,9 @@ class ProblemStatementSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         contacts_data = validated_data.pop('counterpart_contacts', None)
         instance = ProblemStatement.objects.create(**validated_data)
-        if not contacts_data:
-            contacts_data = _default_contacts_list()
-        for item in contacts_data:
-            CounterpartContact.objects.create(company=instance.company, **item)
+        if contacts_data:
+            for item in contacts_data:
+                CounterpartContact.objects.create(company=instance.company, **item)
         return instance
 
     def update(self, instance, validated_data):
