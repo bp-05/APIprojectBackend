@@ -20,7 +20,7 @@ def export_ficha_api_view(request, subject_id: int):
     
     Permisos:
     - El docente de la asignatura
-    - Usuarios con rol 'admin' o 'VCM'
+    - Usuarios con rol 'ADMIN', 'VCM', 'COORD', 'DC' o 'DAC'
     
     NOTA: El sistema SIEMPRE genera un Excel válido, incluso si faltan datos.
     Los datos faltantes se llenan con cadenas vacías.
@@ -44,7 +44,7 @@ def export_ficha_api_view(request, subject_id: int):
     user = request.user
     is_teacher = subject.teacher and subject.teacher.id == user.id
     is_admin = user.is_staff or user.is_superuser
-    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador', 'DC', 'DAC']
+    is_vcm = getattr(user, 'role', None) in ['VCM', 'ADMIN', 'COORD', 'DC', 'DAC']
     
     if not (is_teacher or is_admin or is_vcm):
         return Response(
@@ -78,7 +78,7 @@ def export_proyecto_api_view(request, subject_id: int, problem_statement_id: int
     
     Permisos:
     - El docente de la asignatura
-    - Usuarios con rol 'admin' o 'VCM'
+    - Usuarios con rol 'ADMIN', 'VCM', 'COORD', 'DC' o 'DAC'
     
     NOTA: El sistema SIEMPRE genera un Excel válido, incluso si faltan datos.
     Los datos faltantes se llenan con cadenas vacías.
@@ -109,7 +109,7 @@ def export_proyecto_api_view(request, subject_id: int, problem_statement_id: int
     user = request.user
     is_teacher = subject.teacher and subject.teacher.id == user.id
     is_admin = user.is_staff or user.is_superuser
-    is_vcm = getattr(user, 'role', None) in ['VCM', 'admin', 'coordinador', 'DC', 'DAC']
+    is_vcm = getattr(user, 'role', None) in ['VCM', 'ADMIN', 'COORD', 'DC', 'DAC']
     
     if not (is_teacher or is_admin or is_vcm):
         return Response(
