@@ -2,11 +2,10 @@ from rest_framework import viewsets, permissions
 from rest_framework import exceptions
 from django.db.models import Q
 from subjects.models import Subject
-from .models import Company, ProblemStatement, CompanyEngagementScope, CounterpartContact
+from .models import Company, ProblemStatement, CounterpartContact
 from .serializers import (
     CompanySerializer,
     ProblemStatementSerializer,
-    CompanyEngagementScopeSerializer,
     CounterpartContactSerializer,
 )
 
@@ -86,37 +85,6 @@ class ProblemStatementViewSet(viewsets.ModelViewSet):
         if director_scope is not None:
             return qs.filter(director_scope | Q(subject__teacher=user))
         return qs.filter(subject__teacher=user)
-
-
-class CompanyEngagementScopeViewSet(viewsets.ModelViewSet):
-    queryset = CompanyEngagementScope.objects.all().select_related('company')
-    serializer_class = CompanyEngagementScopeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ['company', 'subject_code', 'subject_section', 'subject_period_season', 'subject_period_year']
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        user = self.request.user
-        if _has_full_company_scope(user):
-            return qs
-        # Limitar por asignaturas del docente y directores sin FK: construir OR por code+section
-        cond = Q(pk__isnull=True)
-        teacher_pairs = Subject.objects.filter(teacher=user).values_list('code', 'section', 'period_year', 'period_season')
-        for code, section, period_year, period_season in teacher_pairs:
-            cond |= Q(
-                subject_code=code,
-                subject_section=section,
-                subject_period_year=period_year,
-                subject_period_season=period_season,
-            )
-        for code, section, period_year, period_season in _subject_pairs_for_director(user):
-            cond |= Q(
-                subject_code=code,
-                subject_section=section,
-                subject_period_year=period_year,
-                subject_period_season=period_season,
-            )
-        return qs.filter(cond)
 
 
 class CounterpartContactViewSet(viewsets.ModelViewSet):

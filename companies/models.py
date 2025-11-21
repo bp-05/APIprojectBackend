@@ -56,32 +56,4 @@ class CounterpartContact(models.Model): #ficha proyecto api ¿Quiénes participa
         return f"Contact {self.name} - {self.company_id}"
 
 
-class CompanyEngagementScope(models.Model):  # alcance con contraparte, movido desde subjects
-    benefits_from_student = models.TextField(blank=True, default="")
-    has_value_or_research_project = models.BooleanField(default=False)
-    time_availability_and_participation = models.TextField(blank=True, default="")
-    workplace_has_conditions_for_group = models.BooleanField(default=False)
-    meeting_schedule_availability = models.TextField(blank=True, default="")
-    # Asociacion con Subject sin FK: guardar code, section y periodo
-    subject_code = models.CharField(max_length=20)
-    subject_section = models.CharField(max_length=10, default="1")
-    subject_period_season = models.CharField(max_length=1, choices=PERIOD_SEASON_CHOICES)
-    subject_period_year = models.PositiveIntegerField()
-    # Dependencia con Company
-    company = models.ForeignKey('companies.Company', on_delete=models.PROTECT, related_name='engagement_scopes')
 
-    class Meta:
-        ordering = ("company", "subject_period_year", "subject_period_season", "subject_code", "subject_section")
-        constraints = [
-            models.UniqueConstraint(
-                fields=("company", "subject_code", "subject_section", "subject_period_season", "subject_period_year"),
-                name="uniq_company_engagement_company_subject",
-            ),
-        ]
-
-    @property
-    def subject_period_code(self):
-        return f"{self.subject_period_season}-{self.subject_period_year}"
-
-    def __str__(self):
-        return f"Engagement scope for {self.subject_code} ({self.subject_period_code}) - {self.company.name}"

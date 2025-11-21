@@ -14,6 +14,7 @@ from .models import (
     ApiType2Completion,
     ApiType3Completion,
     PeriodPhaseSchedule,
+    CompanyEngagementScope,
 )
 """Serializers for subjects app.
 
@@ -249,3 +250,17 @@ class PeriodPhaseScheduleSerializer(serializers.ModelSerializer):
         if start and end and end < start:
             raise serializers.ValidationError({'end_date': 'end_date no puede ser anterior a start_date'})
         return attrs
+
+
+class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyEngagementScope
+        fields = [
+            'id',
+            'benefits_from_student',
+            'has_value_or_research_project',
+            'time_availability_and_participation',
+            'workplace_has_conditions_for_group',
+            'meeting_schedule_availability',
+            'subject',
+        ]

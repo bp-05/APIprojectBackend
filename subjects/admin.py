@@ -15,6 +15,7 @@ from .models import (
     ApiType2Completion,
     ApiType3Completion,
     PeriodPhaseSchedule,
+    CompanyEngagementScope,
 )
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 
@@ -140,7 +141,19 @@ class PeriodSettingAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-## CompanyEngagementScope admin movido a companies.admin
+
+@admin.register(CompanyEngagementScope)
+class CompanyEngagementScopeAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "subject",
+        "has_value_or_research_project",
+        "workplace_has_conditions_for_group",
+    )
+    list_filter = ("has_value_or_research_project", "workplace_has_conditions_for_group")
+    search_fields = ("subject__code", "subject__name")
+    autocomplete_fields = ("subject",)
+    ordering = ("subject",)
 
 
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin

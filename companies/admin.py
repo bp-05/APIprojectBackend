@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Company, ProblemStatement, CounterpartContact, CompanyEngagementScope
+from .models import Company, ProblemStatement, CounterpartContact
 
 
 @admin.register(Company)
@@ -26,19 +26,4 @@ class CounterpartContactAdmin(admin.ModelAdmin):
     ordering = ("company", "id")
 
 
-@admin.register(CompanyEngagementScope)
-class CompanyEngagementScopeAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "company",
-        "subject_code",
-        "subject_section",
-        "subject_period_season",
-        "subject_period_year",
-        "has_value_or_research_project",
-        "workplace_has_conditions_for_group",
-    )
-    list_filter = ("has_value_or_research_project", "workplace_has_conditions_for_group", "company", "subject_period_season")
-    search_fields = ("company__name", "subject_code", "subject_section", "subject_period_year")
-    autocomplete_fields = ("company",)
-    ordering = ("company", "subject_period_year", "subject_period_season", "subject_code", "subject_section")
+

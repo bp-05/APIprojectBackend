@@ -38,6 +38,7 @@ from subjects.views import (
     ApiType2CompletionViewSet,
     ApiType3CompletionViewSet,
     PeriodPhaseScheduleViewSet,
+    CompanyEngagementScopeViewSet,
     subject_stream,
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
@@ -45,7 +46,6 @@ from descriptors.views import DescriptorViewSet
 from companies.views import (
     CompanyViewSet,
     ProblemStatementViewSet,
-    CompanyEngagementScopeViewSet,
     CounterpartContactViewSet,
 )
 

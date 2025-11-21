@@ -367,14 +367,8 @@ class ProyectoAPIDataCollector:
         }
         
         try:
-            # Buscar engagement scope para esta asignatura
-            from companies.models import CompanyEngagementScope
-            scope = CompanyEngagementScope.objects.filter(
-                subject_code=self.subject.code,
-                subject_section=self.subject.section,
-                subject_period_season=self.subject.period_season,
-                subject_period_year=self.subject.period_year
-            ).first()
+            # Buscar engagement scope asociado directamente al subject
+            scope = getattr(self.subject, 'engagement_scope', None)
             
             if scope:
                 return {

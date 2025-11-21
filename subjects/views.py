@@ -22,6 +22,7 @@ from .models import (
     ApiType2Completion,
     ApiType3Completion,
     PeriodPhaseSchedule,
+    CompanyEngagementScope,
 )
 ## ProblemStatement model imported by companies app where its views live
 from .serializers import (
@@ -37,6 +38,7 @@ from .serializers import (
     ApiType2CompletionSerializer,
     ApiType3CompletionSerializer,
     PeriodPhaseScheduleSerializer,
+    CompanyEngagementScopeSerializer,
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator, IsAdminOrAcademicDept
 from .utils import get_current_period, normalize_season_token, parse_period_string
@@ -338,10 +340,28 @@ class ApiType3CompletionViewSet(viewsets.ModelViewSet):
         return qs.filter(subject__teacher=user)
 
 
-## CompanyEngagementScopeViewSet movido a companies.views
-
-
 ## ProblemStatementViewSet movido a companies.views
+
+
+class CompanyEngagementScopeViewSet(viewsets.ModelViewSet):
+    queryset = CompanyEngagementScope.objects.all().select_related('subject')
+    serializer_class = CompanyEngagementScopeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ['subject']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if (
+            getattr(user, 'is_staff', False)
+            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
+            or user.groups.filter(name__in=['vcm']).exists()
+        ):
+            return qs
+        director_scope = _director_scope_q(user)
+        if director_scope is not None:
+            return qs.filter(director_scope | Q(subject__teacher=user))
+        return qs.filter(subject__teacher=user)
 
 
 class PeriodPhaseScheduleViewSet(viewsets.ModelViewSet):
