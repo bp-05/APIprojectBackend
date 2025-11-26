@@ -245,8 +245,11 @@ static/
 
 # Environment variables
 .env
-.env.*
+.env.prod
+.env.local
+.env.development
 !.env.example
+!.env.prod.example
 
 # IDE - VSCode
 .vscode/
@@ -298,3 +301,7 @@ Desktop.ini
 *.bak
 *.tmp
 *~
+
+# Deploy scripts (contienen placeholders para credenciales)
+scripts/deploy_ec2_userdata.sh
+scripts/deploy_ec2_manual.sh
