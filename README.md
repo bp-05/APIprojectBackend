@@ -93,6 +93,21 @@ Backend Django/DRF con MySQL y Redis (Celery) dockerizados. Incluye JWT para aut
 - `GET/POST /api/api3-completions/`, `GET/PUT/PATCH/DELETE /api/api3-completions/{id}/`
 - `GET/POST /api/period-phase-schedules/`, `GET/PUT/PATCH/DELETE /api/period-phase-schedules/{id}/` (ADMIN y COORD) para definir rangos globales de fases.
 
+### Progreso de Fases de Asignaturas (Gantt)
+- `GET/POST /api/subject-phase-progress/`, `GET/PUT/PATCH/DELETE /api/subject-phase-progress/{id}/`
+- `GET /api/subject-phase-progress/by-subject/{subject_id}/` obtiene todos los registros de progreso para una asignatura específica.
+- `POST /api/subject-phase-progress/bulk-upsert/` crea o actualiza múltiples registros en una sola petición.
+  - Body: array de objetos con `subject` (id), `phase` (formulacion|gestion|validacion), `status` (nr|ec|rz), `notes` (opcional).
+  - Respuesta: `{ "success": [...], "errors": [...] }`
+- Permisos: solo ADMIN y COORD pueden crear/modificar/eliminar.
+- Filtros: `?subject=`, `?phase=`, `?status=`
+- Estados posibles:
+  - `nr`: No realizado
+  - `ec`: En curso
+  - `rz`: Realizado
+- Campos de auditoría: `updated_at` (automático), `updated_by` (usuario que hizo el cambio).
+- Restricción: un único registro por combinación (subject, phase).
+
 ### Companies
 - `GET/POST /api/companies/`, `GET/PUT/PATCH/DELETE /api/companies/{id}/`
 - `GET/POST /api/problem-statements/`, `GET/PUT/PATCH/DELETE /api/problem-statements/{id}/`
@@ -230,6 +245,10 @@ Subjects
   - Depende: `subjects.Subject` (OneToOne)
 - ApiType3Completion
   - Depende: `subjects.Subject` (OneToOne)
+- SubjectPhaseProgress
+  - Depende: `subjects.Subject` (FK), `users.User` (updated_by, opcional)
+  - Reglas: único por (`subject`, `phase`)
+  - Campos: `phase` (formulacion|gestion|validacion), `status` (nr|ec|rz), `notes`, `updated_at`, `updated_by`
 
 Companies
 - Company

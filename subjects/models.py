@@ -367,3 +367,50 @@ class CompanyEngagementScope(models.Model):  # alcance con contraparte
 
     def __str__(self):
         return f"Engagement scope for {self.subject.code}"
+
+
+class SubjectPhaseProgress(models.Model):
+    """
+    Tracks the progress status of each phase for a subject (used in Gantt view).
+    """
+    PHASE_CHOICES = (
+        ("formulacion", "Formulación de requerimientos"),
+        ("gestion", "Gestión de requerimientos"),
+        ("validacion", "Validación de requerimientos"),
+    )
+    STATUS_CHOICES = (
+        ("nr", "No realizado"),
+        ("ec", "En curso"),
+        ("rz", "Realizado"),
+    )
+
+    subject = models.ForeignKey(
+        'subjects.Subject',
+        on_delete=models.CASCADE,
+        related_name='phase_progress'
+    )
+    phase = models.CharField(max_length=20, choices=PHASE_CHOICES)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, default='nr')
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='phase_progress_updates'
+    )
+    notes = models.TextField(blank=True, default="")
+
+    class Meta:
+        ordering = ("subject", "phase")
+        verbose_name = "Progreso de fase"
+        verbose_name_plural = "Progresos de fase"
+        constraints = [
+            models.UniqueConstraint(
+                fields=("subject", "phase"),
+                name="uniq_subject_phase_progress",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.subject.code} - {self.get_phase_display()} - {self.get_status_display()}"

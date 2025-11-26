@@ -23,6 +23,7 @@ from .models import (
     ApiType3Completion,
     PeriodPhaseSchedule,
     CompanyEngagementScope,
+    SubjectPhaseProgress,
 )
 ## ProblemStatement model imported by companies app where its views live
 from .serializers import (
@@ -39,6 +40,7 @@ from .serializers import (
     ApiType3CompletionSerializer,
     PeriodPhaseScheduleSerializer,
     CompanyEngagementScopeSerializer,
+    SubjectPhaseProgressSerializer,
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator, IsAdminOrAcademicDept
 from .utils import get_current_period, normalize_season_token, parse_period_string
@@ -369,4 +371,71 @@ class PeriodPhaseScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = PeriodPhaseScheduleSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
     filterset_fields = ['period_year', 'period_season', 'phase']
+
+
+class SubjectPhaseProgressViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar el progreso de fases de asignaturas (usado en vista Gantt).
+    
+    Solo ADMIN y COORD pueden modificar registros.
+    Permite filtrar por subject para obtener el progreso de una asignatura específica.
+    """
+    queryset = SubjectPhaseProgress.objects.all().select_related('subject', 'updated_by')
+    serializer_class = SubjectPhaseProgressSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
+    filterset_fields = ['subject', 'phase', 'status']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Filtro adicional por subject_id en query params
+        subject_id = self.request.query_params.get('subject')
+        if subject_id:
+            qs = qs.filter(subject_id=subject_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path=r'by-subject/(?P<subject_id>\d+)')
+    def by_subject(self, request, subject_id=None):
+        """Obtiene todos los registros de progreso para una asignatura específica."""
+        qs = self.get_queryset().filter(subject_id=subject_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='bulk-upsert')
+    def bulk_upsert(self, request):
+        """Crea o actualiza múltiples registros de progreso en una sola petición.
+        
+        Espera un array de objetos con: subject, phase, status, notes (opcional)
+        """
+        data_list = request.data if isinstance(request.data, list) else [request.data]
+        results = []
+        errors = []
+        
+        for item in data_list:
+            subject_id = item.get('subject')
+            phase = item.get('phase')
+            status = item.get('status', 'nr')
+            notes = item.get('notes', '')
+            
+            if not subject_id or not phase:
+                errors.append({'error': 'subject y phase son requeridos', 'item': item})
+                continue
+            
+            try:
+                obj, created = SubjectPhaseProgress.objects.update_or_create(
+                    subject_id=subject_id,
+                    phase=phase,
+                    defaults={
+                        'status': status,
+                        'notes': notes,
+                        'updated_by': request.user,
+                    }
+                )
+                serializer = self.get_serializer(obj)
+                results.append({'created': created, 'data': serializer.data})
+            except Exception as e:
+                errors.append({'error': str(e), 'item': item})
+        
+        return Response({
+            'success': results,
+            'errors': errors,
+        }, status=200 if not errors else 207)
 

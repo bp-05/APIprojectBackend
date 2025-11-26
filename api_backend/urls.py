@@ -39,6 +39,7 @@ from subjects.views import (
     ApiType3CompletionViewSet,
     PeriodPhaseScheduleViewSet,
     CompanyEngagementScopeViewSet,
+    SubjectPhaseProgressViewSet,
     subject_stream,
 )
 from forms_app.views import FormInstanceViewSet, FormTemplateViewSet
@@ -70,6 +71,7 @@ router.register(r'alternances', Api3AlternanceViewSet, basename='alternance')
 router.register(r'api2-completions', ApiType2CompletionViewSet, basename='api2-completion')
 router.register(r'api3-completions', ApiType3CompletionViewSet, basename='api3-completion')
 router.register(r'engagement-scopes', CompanyEngagementScopeViewSet, basename='engagement-scope')
+router.register(r'subject-phase-progress', SubjectPhaseProgressViewSet, basename='subject-phase-progress')
 router.register(r'problem-statements', ProblemStatementViewSet, basename='problem-statement')
 router.register(r'counterpart-contacts', CounterpartContactViewSet, basename='counterpart-contact')
 router.register(r'forms', FormInstanceViewSet, basename='forminstance')

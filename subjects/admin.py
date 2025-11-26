@@ -16,6 +16,7 @@ from .models import (
     ApiType3Completion,
     PeriodPhaseSchedule,
     CompanyEngagementScope,
+    SubjectPhaseProgress,
 )
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin
 
@@ -154,6 +155,16 @@ class CompanyEngagementScopeAdmin(admin.ModelAdmin):
     search_fields = ("subject__code", "subject__name")
     autocomplete_fields = ("subject",)
     ordering = ("subject",)
+
+
+@admin.register(SubjectPhaseProgress)
+class SubjectPhaseProgressAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "phase", "status", "updated_at", "updated_by")
+    list_filter = ("phase", "status", "updated_at")
+    search_fields = ("subject__code", "subject__name", "updated_by__email")
+    autocomplete_fields = ("subject", "updated_by")
+    ordering = ("subject", "phase")
+    readonly_fields = ("updated_at",)
 
 
 ## Admins for ProblemStatement and CounterpartContact moved to companies.admin

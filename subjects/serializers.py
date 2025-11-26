@@ -15,6 +15,7 @@ from .models import (
     ApiType3Completion,
     PeriodPhaseSchedule,
     CompanyEngagementScope,
+    SubjectPhaseProgress,
 )
 """Serializers for subjects app.
 
@@ -264,3 +265,38 @@ class CompanyEngagementScopeSerializer(serializers.ModelSerializer):
             'meeting_schedule_availability',
             'subject',
         ]
+
+
+class SubjectPhaseProgressSerializer(serializers.ModelSerializer):
+    """Serializer para el progreso de fases de asignaturas (usado en vista Gantt)."""
+    subject_name = serializers.CharField(source='subject.name', read_only=True)
+    updated_by_name = serializers.CharField(source='updated_by.get_full_name', read_only=True)
+
+    class Meta:
+        model = SubjectPhaseProgress
+        fields = [
+            'id',
+            'subject',
+            'subject_name',
+            'phase',
+            'status',
+            'updated_at',
+            'updated_by',
+            'updated_by_name',
+            'notes',
+        ]
+        read_only_fields = ['updated_at', 'updated_by', 'updated_by_name']
+
+    def create(self, validated_data):
+        # Asignar el usuario que hace la petición
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Asignar el usuario que hace la petición
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            validated_data['updated_by'] = request.user
+        return super().update(instance, validated_data)
