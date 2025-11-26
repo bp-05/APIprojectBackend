@@ -66,8 +66,16 @@ MIDDLEWARE = [
     'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
-# Allow CORS for local development
-CORS_ALLOWED_ORIGINS = ['http://localhost:5173' ,'http://localhost:3000']
+# CORS Configuration
+# En producción, configurar CORS_ALLOWED_ORIGINS con las IPs/dominios del frontend
+_cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if _cors_origins:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _cors_origins.split(",") if origin.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:3000']
+
+# Para desarrollo/testing, permite todos los orígenes (NO usar en producción real)
+CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL", "False").lower() in {"1", "true", "yes"}
 
 REST_FRAMEWORK = {
   'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication','rest_framework.authentication.SessionAuthentication',
