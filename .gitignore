@@ -298,3 +298,6 @@ Desktop.ini
 *.bak
 *.tmp
 *~
+
+deploy_ec2_manual.sh
+deploy_ec2_userdata.sh
