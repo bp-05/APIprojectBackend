@@ -22,6 +22,26 @@ from subjects.utils import (
 logger = logging.getLogger(__name__)
 
 
+def _ensure_phase_progress(subject):
+    """Asegura que existan los 3 registros de progreso de fases para una asignatura.
+    
+    Crea los registros faltantes con estado 'nr' (no realizado).
+    No sobrescribe registros existentes.
+    """
+    try:
+        SubjectPhaseProgress = apps.get_model('subjects', 'SubjectPhaseProgress')
+    except (LookupError, ImproperlyConfigured):
+        return
+    
+    phases = ['formulacion', 'gestion', 'validacion']
+    for phase in phases:
+        SubjectPhaseProgress.objects.get_or_create(
+            subject=subject,
+            phase=phase,
+            defaults={'status': 'nr'}
+        )
+
+
 def _norm_str(s: Optional[str]) -> str:
     import unicodedata as _ud
     s = (s or "").strip().lower()
@@ -425,6 +445,11 @@ def _load_populate_json():
                         if created or updated:
                             obj.save()
                             upserted += 1
+                        
+                        # Crear progreso de fases por defecto si no existe
+                        # (para subjects existentes que no tienen el progreso creado)
+                        _ensure_phase_progress(obj)
+                        
                     logger.info("Populate: subjects procesados: %d", upserted)
             except (OperationalError, ProgrammingError) as db_err:
                 logger.warning("Populate subjects omitido (DB no lista): %s", db_err)
