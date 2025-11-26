@@ -26,7 +26,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret-key-change-me")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True").lower() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS: lee de variable de entorno, separado por comas
+_allowed = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()] if _allowed else ["*"] if DEBUG else []
 
 
 # Application definition
@@ -161,6 +163,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
