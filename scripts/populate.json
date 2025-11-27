@@ -82,7 +82,17 @@
       "email": "contacto@techsolutions.cl",
       "phone": "+56912345678",
       "employees_count": 150,
-      "sector": "Tecnología e Informática"
+      "sector": "Tecnología e Informática",
+      "counterpart_contacts": [
+        {
+          "name": "Carlos Mendoza",
+          "rut": "12.345.678-9",
+          "phone": "+56991234567",
+          "email": "cmendoza@techsolutions.cl",
+          "counterpart_area": "Desarrollo de Software",
+          "role": "Gerente de Proyectos"
+        }
+      ]
     },
     {
       "name": "Constructora Moderna S.A.",
@@ -91,7 +101,17 @@
       "email": "info@constructora-moderna.cl",
       "phone": "+56923456789",
       "employees_count": 320,
-      "sector": "Construcción"
+      "sector": "Construcción",
+      "counterpart_contacts": [
+        {
+          "name": "Patricia Soto",
+          "rut": "14.567.890-1",
+          "phone": "+56992345678",
+          "email": "psoto@constructora-moderna.cl",
+          "counterpart_area": "Obras Civiles",
+          "role": "Jefa de Operaciones"
+        }
+      ]
     },
     {
       "name": "AgriGreen Limitada",
@@ -100,7 +120,17 @@
       "email": "administracion@agrigreen.cl",
       "phone": "+56934567890",
       "employees_count": 85,
-      "sector": "Agricultura"
+      "sector": "Agricultura",
+      "counterpart_contacts": [
+        {
+          "name": "Roberto Fuentes",
+          "rut": "11.222.333-4",
+          "phone": "+56993456789",
+          "email": "rfuentes@agrigreen.cl",
+          "counterpart_area": "Producción Agrícola",
+          "role": "Director de Campo"
+        }
+      ]
     },
     {
       "name": "Logística Express S.A.",
@@ -109,7 +139,17 @@
       "email": "gerencia@logistica-express.cl",
       "phone": "+56945678901",
       "employees_count": 250,
-      "sector": "Logística y Transporte"
+      "sector": "Logística y Transporte",
+      "counterpart_contacts": [
+        {
+          "name": "Andrea Villalobos",
+          "rut": "15.678.901-2",
+          "phone": "+56994567890",
+          "email": "avillalobos@logistica-express.cl",
+          "counterpart_area": "Distribución",
+          "role": "Coordinadora de Rutas"
+        }
+      ]
     },
     {
       "name": "Retail Plus Chile",
@@ -118,7 +158,17 @@
       "email": "contacto@retailplus.cl",
       "phone": "+56956789012",
       "employees_count": 500,
-      "sector": "Retail y Comercio"
+      "sector": "Retail y Comercio",
+      "counterpart_contacts": [
+        {
+          "name": "Felipe Guzmán",
+          "rut": "16.789.012-3",
+          "phone": "+56995678901",
+          "email": "fguzman@retailplus.cl",
+          "counterpart_area": "Ventas",
+          "role": "Gerente Comercial"
+        }
+      ]
     }
   ],
 

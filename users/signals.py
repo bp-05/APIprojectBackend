@@ -230,9 +230,11 @@ def _load_populate_json():
     if companies_list:
         try:
             Company = apps.get_model('companies', 'Company')
+            CounterpartContact = apps.get_model('companies', 'CounterpartContact')
         except (LookupError, ImproperlyConfigured) as e:
             logger.error("Modelo Company no disponible: %s", e)
             Company = None
+            CounterpartContact = None
         if Company is not None:
             try:
                 with transaction.atomic():
@@ -283,6 +285,26 @@ def _load_populate_json():
                             obj.save()
                         if created or updated:
                             created_or_updated += 1
+                        
+                        # Procesar counterpart_contacts si existen
+                        contacts_list = c.get('counterpart_contacts') or []
+                        if contacts_list and CounterpartContact is not None:
+                            for contact_data in contacts_list:
+                                contact_name = (contact_data.get('name') or '').strip()
+                                if not contact_name:
+                                    continue
+                                contact_defaults = {
+                                    'rut': (contact_data.get('rut') or '').strip(),
+                                    'phone': (contact_data.get('phone') or '').strip(),
+                                    'email': (contact_data.get('email') or '').strip(),
+                                    'counterpart_area': (contact_data.get('counterpart_area') or '').strip(),
+                                    'role': (contact_data.get('role') or '').strip(),
+                                }
+                                CounterpartContact.objects.update_or_create(
+                                    company=obj,
+                                    name=contact_name,
+                                    defaults=contact_defaults,
+                                )
                     logger.info("Populate: companies procesadas: %d", created_or_updated)
             except (OperationalError, ProgrammingError) as db_err:
                 logger.warning("Populate companies omitido (DB no lista): %s", db_err)
