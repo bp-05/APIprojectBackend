@@ -127,6 +127,54 @@ class SubjectViewSet(viewsets.ModelViewSet):
             return qs.filter(director_scope | Q(teacher=user))
         return qs.filter(teacher=user)
 
+    def perform_create(self, serializer):
+        """Valida que el DC solo cree asignaturas en su área/carrera."""
+        user = self.request.user
+        if getattr(user, 'role', None) == 'DC':
+            subject_area = serializer.validated_data.get('area')
+            subject_career = serializer.validated_data.get('career')
+            user_career_id = getattr(user, 'career_id', None)
+            user_area_id = getattr(user, 'area_id', None)
+            # Si el DC tiene carrera asignada, validar que la asignatura sea de esa carrera
+            if user_career_id:
+                if subject_career is None or subject_career.id != user_career_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes crear asignaturas para tu carrera asignada.')
+            # Si el DC solo tiene área (sin carrera), validar que la asignatura sea de esa área
+            elif user_area_id:
+                if subject_area is None or subject_area.id != user_area_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes crear asignaturas para tu área asignada.')
+            # Si el DC no tiene ni área ni carrera asignada, no puede crear
+            else:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Tu usuario no tiene área o carrera asignada. Contacta al administrador.')
+        serializer.save()
+
+    def perform_update(self, serializer):
+        """Valida que el DC solo actualice asignaturas de su área/carrera."""
+        user = self.request.user
+        if getattr(user, 'role', None) == 'DC':
+            subject_area = serializer.validated_data.get('area', serializer.instance.area)
+            subject_career = serializer.validated_data.get('career', serializer.instance.career)
+            user_career_id = getattr(user, 'career_id', None)
+            user_area_id = getattr(user, 'area_id', None)
+            # Si el DC tiene carrera asignada, validar que la asignatura pertenezca a esa carrera
+            if user_career_id:
+                if subject_career is None or getattr(subject_career, 'id', subject_career) != user_career_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes editar asignaturas de tu carrera asignada.')
+            # Si el DC solo tiene área (sin carrera), validar que la asignatura pertenezca a esa área
+            elif user_area_id:
+                if subject_area is None or getattr(subject_area, 'id', subject_area) != user_area_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes editar asignaturas de tu área asignada.')
+            # Si el DC no tiene ni área ni carrera asignada, no puede editar
+            else:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Tu usuario no tiene área o carrera asignada. Contacta al administrador.')
+        serializer.save()
+
     @action(detail=False, methods=['get'], url_path=r'by-code/(?P<code>[^/]+)/(?P<section>[^/]+)')
     def by_code(self, request, code=None, section=None):
         qs = self.get_queryset().filter(code=code, section=section)
