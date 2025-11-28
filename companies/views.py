@@ -13,7 +13,7 @@ from .serializers import (
 def _has_full_company_scope(user):
     return (
         getattr(user, 'is_staff', False)
-        or getattr(user, 'role', None) in ['VCM', 'COORD']
+        or getattr(user, 'role', None) in ['VCM', 'COORD', 'DC', 'DOC']
         or user.groups.filter(name__in=['vcm']).exists()
     )
 

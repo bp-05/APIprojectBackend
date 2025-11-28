@@ -15,9 +15,15 @@ class DescriptorViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
+        
+        # Filter by subject if specified in query params
+        subject_id = self.request.query_params.get('subject')
+        if subject_id:
+            qs = qs.filter(subject_id=subject_id)
+        
         if (
             getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD']
+            or getattr(user, 'role', None) in ['DAC', 'VCM', 'COORD', 'DC']
             or user.groups.filter(name__in=['vcm']).exists()
         ):
             return qs
@@ -26,7 +32,7 @@ class DescriptorViewSet(viewsets.ModelViewSet):
     def _has_elevated_access(self, user):
         return (
             getattr(user, 'is_staff', False)
-            or getattr(user, 'role', None) in ['ADMIN', 'DAC', 'VCM']
+            or getattr(user, 'role', None) in ['ADMIN', 'DAC', 'VCM', 'DC']
             or user.groups.filter(name__in=['vcm']).exists()
         )
 

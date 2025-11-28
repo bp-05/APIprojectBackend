@@ -62,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         is_vcm_group = user.groups.filter(name__in=['vcm']).exists()
         is_vcm_role = getattr(user, 'role', None) == 'VCM'
-        if not (getattr(user, 'is_staff', False) or getattr(user, 'role', None) in ['ADMIN', 'DAC'] or is_vcm_group or is_vcm_role):
+        if not (getattr(user, 'is_staff', False) or getattr(user, 'role', None) in ['ADMIN', 'DAC', 'COORD'] or is_vcm_group or is_vcm_role):
             return Response({"detail": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
         qs = User.objects.filter(role='DOC', is_active=True).order_by('first_name', 'last_name', 'email')
         serializer = UserListSerializer(qs, many=True)

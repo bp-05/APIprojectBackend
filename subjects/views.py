@@ -23,6 +23,7 @@ from .models import (
     ApiType3Completion,
     PeriodPhaseSchedule,
     CompanyEngagementScope,
+    SubjectPhaseProgress,
 )
 ## ProblemStatement model imported by companies app where its views live
 from .serializers import (
@@ -39,6 +40,7 @@ from .serializers import (
     ApiType3CompletionSerializer,
     PeriodPhaseScheduleSerializer,
     CompanyEngagementScopeSerializer,
+    SubjectPhaseProgressSerializer,
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator, IsAdminOrAcademicDept
 from .utils import get_current_period, normalize_season_token, parse_period_string
@@ -124,6 +126,54 @@ class SubjectViewSet(viewsets.ModelViewSet):
         if director_scope is not None:
             return qs.filter(director_scope | Q(teacher=user))
         return qs.filter(teacher=user)
+
+    def perform_create(self, serializer):
+        """Valida que el DC solo cree asignaturas en su área/carrera."""
+        user = self.request.user
+        if getattr(user, 'role', None) == 'DC':
+            subject_area = serializer.validated_data.get('area')
+            subject_career = serializer.validated_data.get('career')
+            user_career_id = getattr(user, 'career_id', None)
+            user_area_id = getattr(user, 'area_id', None)
+            # Si el DC tiene carrera asignada, validar que la asignatura sea de esa carrera
+            if user_career_id:
+                if subject_career is None or subject_career.id != user_career_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes crear asignaturas para tu carrera asignada.')
+            # Si el DC solo tiene área (sin carrera), validar que la asignatura sea de esa área
+            elif user_area_id:
+                if subject_area is None or subject_area.id != user_area_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes crear asignaturas para tu área asignada.')
+            # Si el DC no tiene ni área ni carrera asignada, no puede crear
+            else:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Tu usuario no tiene área o carrera asignada. Contacta al administrador.')
+        serializer.save()
+
+    def perform_update(self, serializer):
+        """Valida que el DC solo actualice asignaturas de su área/carrera."""
+        user = self.request.user
+        if getattr(user, 'role', None) == 'DC':
+            subject_area = serializer.validated_data.get('area', serializer.instance.area)
+            subject_career = serializer.validated_data.get('career', serializer.instance.career)
+            user_career_id = getattr(user, 'career_id', None)
+            user_area_id = getattr(user, 'area_id', None)
+            # Si el DC tiene carrera asignada, validar que la asignatura pertenezca a esa carrera
+            if user_career_id:
+                if subject_career is None or getattr(subject_career, 'id', subject_career) != user_career_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes editar asignaturas de tu carrera asignada.')
+            # Si el DC solo tiene área (sin carrera), validar que la asignatura pertenezca a esa área
+            elif user_area_id:
+                if subject_area is None or getattr(subject_area, 'id', subject_area) != user_area_id:
+                    from rest_framework.exceptions import PermissionDenied
+                    raise PermissionDenied('Solo puedes editar asignaturas de tu área asignada.')
+            # Si el DC no tiene ni área ni carrera asignada, no puede editar
+            else:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('Tu usuario no tiene área o carrera asignada. Contacta al administrador.')
+        serializer.save()
 
     @action(detail=False, methods=['get'], url_path=r'by-code/(?P<code>[^/]+)/(?P<section>[^/]+)')
     def by_code(self, request, code=None, section=None):
@@ -369,4 +419,71 @@ class PeriodPhaseScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = PeriodPhaseScheduleSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
     filterset_fields = ['period_year', 'period_season', 'phase']
+
+
+class SubjectPhaseProgressViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar el progreso de fases de asignaturas (usado en vista Gantt).
+    
+    Solo ADMIN y COORD pueden modificar registros.
+    Permite filtrar por subject para obtener el progreso de una asignatura específica.
+    """
+    queryset = SubjectPhaseProgress.objects.all().select_related('subject', 'updated_by')
+    serializer_class = SubjectPhaseProgressSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
+    filterset_fields = ['subject', 'phase', 'status']
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Filtro adicional por subject_id en query params
+        subject_id = self.request.query_params.get('subject')
+        if subject_id:
+            qs = qs.filter(subject_id=subject_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path=r'by-subject/(?P<subject_id>\d+)')
+    def by_subject(self, request, subject_id=None):
+        """Obtiene todos los registros de progreso para una asignatura específica."""
+        qs = self.get_queryset().filter(subject_id=subject_id)
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='bulk-upsert')
+    def bulk_upsert(self, request):
+        """Crea o actualiza múltiples registros de progreso en una sola petición.
+        
+        Espera un array de objetos con: subject, phase, status, notes (opcional)
+        """
+        data_list = request.data if isinstance(request.data, list) else [request.data]
+        results = []
+        errors = []
+        
+        for item in data_list:
+            subject_id = item.get('subject')
+            phase = item.get('phase')
+            status = item.get('status', 'nr')
+            notes = item.get('notes', '')
+            
+            if not subject_id or not phase:
+                errors.append({'error': 'subject y phase son requeridos', 'item': item})
+                continue
+            
+            try:
+                obj, created = SubjectPhaseProgress.objects.update_or_create(
+                    subject_id=subject_id,
+                    phase=phase,
+                    defaults={
+                        'status': status,
+                        'notes': notes,
+                        'updated_by': request.user,
+                    }
+                )
+                serializer = self.get_serializer(obj)
+                results.append({'created': created, 'data': serializer.data})
+            except Exception as e:
+                errors.append({'error': str(e), 'item': item})
+        
+        return Response({
+            'success': results,
+            'errors': errors,
+        }, status=200 if not errors else 207)
 

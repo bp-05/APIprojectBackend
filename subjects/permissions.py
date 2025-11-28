@@ -5,7 +5,24 @@ class IsSubjectTeacherOrAdmin(BasePermission):
     """
     Docente: solo ve/edita sus asignaturas.
     Admin/Coordinador (grupo 'vcm' o is_staff): acceso amplio.
+    DC: puede crear/editar asignaturas de su área.
     """
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        # Lectura: todos los autenticados
+        if request.method in SAFE_METHODS:
+            return True
+        # Escritura: admin, staff, roles elevados, DC o docentes
+        if (
+            getattr(user, 'is_staff', False)
+            or getattr(user, 'role', None) in ['ADMIN', 'DAC', 'VCM', 'COORD', 'DC', 'DOC']
+            or user.groups.filter(name__in=['vcm']).exists()
+        ):
+            return True
+        return False
 
     def has_object_permission(self, request, view, obj):
         user = request.user
