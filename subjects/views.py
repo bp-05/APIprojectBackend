@@ -44,7 +44,7 @@ from .serializers import (
 )
 from .permissions import IsSubjectTeacherOrAdmin, IsAdminOrCoordinator, IsAdminOrAcademicDept
 from .utils import get_current_period, normalize_season_token, parse_period_string
-from .events import subject_event_stream
+from .events import subject_event_stream, async_subject_event_stream
 
 
 def _authenticate_stream_request(request):
@@ -69,25 +69,32 @@ def _authenticate_stream_request(request):
     return authenticated[0]
 
 
-@require_GET
-def subject_stream(request):
+async def subject_stream(request):
+    """
+    SSE endpoint for real-time subject updates.
+    Uses async generator for ASGI compatibility (Uvicorn).
+    """
     user = _authenticate_stream_request(request)
     if not user:
         return HttpResponse(status=401)
 
-    def event_generator():
+    async def async_event_generator():
         # Let the browser know how often to retry if the stream drops.
         yield "retry: 10000\n\n"
-        with subject_event_stream() as listener:
-            for message in listener:
-                if message.get("type") != "message":
-                    continue
-                data = message.get("data")
-                if not data:
-                    continue
-                yield f"data: {data}\n\n"
+        async for message in async_subject_event_stream():
+            msg_type = message.get("type")
+            if msg_type == "keepalive":
+                # Send SSE comment as keepalive
+                yield ": keepalive\n\n"
+                continue
+            if msg_type != "message":
+                continue
+            data = message.get("data")
+            if not data:
+                continue
+            yield f"data: {data}\n\n"
 
-    response = StreamingHttpResponse(event_generator(), content_type="text/event-stream")
+    response = StreamingHttpResponse(async_event_generator(), content_type="text/event-stream")
     response["Cache-Control"] = "no-cache"
     response["X-Accel-Buffering"] = "no"
     return response
