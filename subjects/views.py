@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.http import HttpResponse, StreamingHttpResponse
 from django.views.decorators.http import require_GET
+from asgiref.sync import sync_to_async
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -47,21 +48,23 @@ from .utils import get_current_period, normalize_season_token, parse_period_stri
 from .events import subject_event_stream, async_subject_event_stream
 
 
-def _authenticate_stream_request(request):
+def _authenticate_stream_request_sync(request, token_param):
     """
-    Resolve the authenticated user for the SSE endpoint using session or JWT.
+    Synchronous authentication logic for SSE endpoint.
     """
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
         return user
     jwt_auth = JWTAuthentication()
-    auth_header = request.META.get("HTTP_AUTHORIZATION")
-    token_query = request.GET.get("token")
-    if not auth_header and token_query:
-        # Allow passing the JWT as a query param for EventSource compatibility
-        request.META["HTTP_AUTHORIZATION"] = f"Bearer {token_query}"
+    # Build a fake request-like object for JWT auth
+    class FakeRequest:
+        def __init__(self):
+            self.META = dict(request.META)
+            if token_param:
+                self.META["HTTP_AUTHORIZATION"] = f"Bearer {token_param}"
+    fake_req = FakeRequest()
     try:
-        authenticated = jwt_auth.authenticate(request)
+        authenticated = jwt_auth.authenticate(fake_req)
     except (InvalidToken, Exception):
         authenticated = None
     if authenticated is None:
@@ -74,7 +77,8 @@ async def subject_stream(request):
     SSE endpoint for real-time subject updates.
     Uses async generator for ASGI compatibility (Uvicorn).
     """
-    user = _authenticate_stream_request(request)
+    token_param = request.GET.get("token")
+    user = await sync_to_async(_authenticate_stream_request_sync, thread_sensitive=True)(request, token_param)
     if not user:
         return HttpResponse(status=401)
 
